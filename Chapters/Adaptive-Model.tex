@@ -1,0 +1,1077 @@
+
+\singlespacing
+
+\chapter{An adaptive behaviour model for association football using rankings as prior information} 
+\chaptermark{An adaptive behaviour model for association football}
+\label{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information}
+
+\onehalfspacing
+
+\section{Introduction}
+
+We propose a model in which teams are defined by their overall capacity (a single parameter) which they then partition
+into attacking or defending according to the current time and state of the match. The model is most closely related to
+that of \cite{DixonRobinson1998} through its explicit modelling of goals times. The use of a single parameter to
+represent a team's strength (as opposed to two parameters) offers parsimony in comparison to other similar models in
+literature, and also means that a ranking of the teams (based solely on the value of the single parameter) is readily
+available. We are thus also able to place an informative prior upon the team strength parameters jointly that reflects
+belief about the relative ranking of the teams. Furthermore, the model developed here offers insight into how teams
+adapt their behaviour in response to the time and state of a match. Also, models such as the one presented here, which
+use the extra information of goal times, are relatively uncommon in the literature when compared to models which only
+use the final count of goals or the final match outcome. We hope to highlight the merits of models which use more
+detailed data which, in essence, should lead to higher predictive ability, as will be seen in Section
+\ref{sec:Model_comparisons}.
+
+The chapter is organised as follows: Section \ref{sec:Association_football_models} presents models in the current
+literature and introduces a new model for association football. Section
+\ref{sec:Bayesian_inference_for_parameter_estimation} describes Bayesian computational methods for parameter inference.
+Section \ref{sec:Model_comparisons} compares the predictive performance of four models and compares the probabilities
+predicted by the models with those used by a major UK bookmaker, Bet365. Lastly, concluding remarks are presented in
+Section \ref{sec:Concluding_remarks_adaptive}.
+
+\section{Association football models}
+\label{sec:Association_football_models}
+ 
+\subsection{The model of Dixon and Robinson} 
+\label{DR}
+
+\cite{DixonRobinson1998} proposed a non-homogeneous Poisson process model considering goal times for each of the
+competing teams. They denoted their best model `model VI' which has the following specification for the instantaneous
+rates of scoring in match \(m\) where team \(i\) plays at home against team \(j\):
+\begin{align}
+\lambda_m^{DR}(t) &= \gamma_h \alpha_i \beta_j \lambda_{xy} \rho(t) + \epsilon_1 t\\
+\mu_m^{DR}(t) &= \alpha_j \beta_i \mu_{xy} \rho(t) + \epsilon_2 t 
+\end{align}
+where \(\lambda_m^{DR}(t)\) and \(\mu_m^{DR}(t)\) are the instantaneous rates of scoring for team \(i\) and team \(j\)
+respectively, \(\gamma_h\) is a constant parameter to represent the home advantage, \(\alpha_k\) and \(\beta_k\) are
+constant parameters representing the attacking and defensive capability of team \(k\) respectively, \(\epsilon_1\) and
+\(\epsilon_2\) are parameters designed to account for the increase in rate of goals throughout a match for the home and
+away teams respectively, \(\lambda_{xy}\) and \(\mu_{xy}\) are parameters which adjust the rates of scoring for the home
+and away teams respectively based on the current score being \(x\)-\(y\) (\(x\) for the home team and \(y\) for the away
+team), and \(t\) is the time elapsed in the current match, \(t \in [0, 1]\). Note that time is measured on a scale for
+which 1 unit is equivalent to 90 minutes and thus observed injury time goals will be assigned to \(t=0.5\) or \(t=1.0\).
+The parameter \(\rho(t)\) is included to account for recording of injury-time goals as occurring in the last minute of
+the respective half of the match and is specified as:
+\begin{align}
+\rho(t) = \left \{
+\begin{array}{ll}
+\rho_1 \quad &\text{if \(t \in (44/90, 45/90]\)}\\
+\rho_2 \quad &\text{if \(t \in (89/90, 90/90]\)}\\
+1      \quad &\text{otherwise.}
+\end{array} \right.
+\end{align}
+The parameter \(\lambda_{xy}\) is defined as:
+\begin{align}
+\lambda_{xy} = \left \{
+\begin{array}{ll}
+\lambda_{10} \quad &\text{if the current score is 1-0}\\
+\lambda_{01} \quad &\text{if the current score is 0-1}\\
+\lambda_{21} \quad &\text{if the home team is winning and the score is not 1-0}\\
+\lambda_{12} \quad &\text{if the away team is winning and the score is not 0-1}\\
+1 			 \quad &\text{otherwise}
+\end{array} \right.
+\end{align}
+and the parameter \(\mu_{xy}\) is defined similarly. To provide model identifiability, the constraint \(\frac{1}{20}
+\sum_{k=1}^{20} \alpha_k = 1\) is necessary.
+ 
+With its use of separate parameters \(\alpha_k\), \(1 \leq k \leq 19\), and \(\beta_l\), \(1 \leq l \leq 20\) the
+model has a high number of parameters. However it is natural to assume (and this can be seen in the sample of parameter
+estimates in \cite{DixonRobinson1998}) that there is a strong correlation between the attacking strength and the
+defensive strength of a team. Typically, the top teams have the best attacking and the best defensive strengths, and the
+bottom teams have the worst attacking and the worst defensive strengths. Thus, it seems sensible to instead consider a
+model which only uses a single parameter to represent the overall strength of a team.
+
+\subsection{The Bradley-Terry model} 
+\label{BTC}
+
+The Bradley-Terry model was first proposed by \cite{BradleyTerry1952} and has been used for forecasting association
+football results (see \cite{CattelanVarinFirth2013, KnorrHeld2000, FahrmeirTutz1994}). The Bradley-Terry model for a
+3-outcome event (denoted \(Y \in \{0, 1, 2\}\) where 0, 1, and 2 denote the events `away team win', `draw', and `home
+team win' respectively) where team \(i\) plays at home to team \(j\) is specified by the following probability:
+\begin{align}
+\mathbb{P}(Y \leq y) = \frac{\exp(\delta_y - (h + S_i - S_j))}{1 + \exp(\delta_y - (h + S_i - S_j))}
+\end{align}
+where \(-\infty < \delta_0 < \delta_1 < \delta_2 = \infty\) are the threshold parameters and \(S_k\) represents the
+ability of team \(k\). The constraint \(\delta_0 = -\delta\) and \(\delta_1 = \delta\) with \(\delta \geq 0\) ensures
+that home and away teams have the same probability of winning if there is no home advantage (\(h = 0\)) and the team
+abilities are equal (\(S_i = S_j\)). Larger values of \(\delta\) correspond to a larger probability of the draw outcome,
+\(Y = 1\). The constraint \(\sum_{k=1}^{20} S_k = 0\) is necessary for model identifiability. In contrast to the model
+of \cite{DixonRobinson1998}, the Bradley-Terry model represents only the probabilities of a home win, draw, or away win
+as opposed to modelling the goal times between two competing teams. Thus, it is a natural choice of model when
+considering the 1X2 betting market, as we do in this paper. However, in contrast with the model we propose, the richness
+of available data which includes comprehensive information on goal times, cannot be exploited directly by this class of
+model.
+
+\subsection{A new non-homogeneous Poisson process model} 
+\label{model}
+
+The model we propose is related to the approach taken by \cite{DixonRobinson1998}, in that it is also a non-homogeneous
+Poisson process model. However we replace the two parameters representing attacking and defensive strengths for each
+team with a single parameter, denoted \(R_k\) for team \(k\), representing the total resource (i.e. capacity) of that
+team. We then define the function \(\alpha_k(t)\) to be the proportion of resource team \(k\) puts into attacking at
+time \(t\), leaving \(1 - \alpha_k(t)\) as the proportion of resource allocated to defence. Thus \(\alpha_k(t)\)
+attempts to describe how teams typically behave, whether offensively or defensively, through time in a single match.
+
+The intuitive notion behind this model is that teams divide a finite amount of resource between attacking and defending.
+Shifting the balance of resource towards the former tends to increase the rate of scoring but also conceding goals,
+while shifting towards the latter, tends to reduce both the chance of scoring and of conceding. The model is defined by
+the following instantaneous rates of scoring in match \(m\) where team \(i\) plays at home against team \(j\):
+\begin{align}
+\log(\lambda_m(t)) = h + \alpha_i(t) R_i - (1 - \alpha_j(t)) R_j + \rho(t) \label{homeRate}\\
+\log(\mu_m(t)) = a + \alpha_j(t) R_j - (1 - \alpha_i(t)) R_i + \rho(t) \label{awayRate}
+\end{align}
+where \(\lambda_m(t)\) and \(\mu_m(t)\) are the instantaneous rates of scoring for the home and away teams
+respectively, \(h\) and \(a\) are parameters representing the baseline scoring rate for any home and away team
+respectively, and \(t\) is as described in Section \ref{DR}. However we modify \(\rho(t)\) slightly so that:
+\begin{align}
+\rho(t) = \left \{
+\begin{array}{ll}
+\rho_1 \quad &\text{if \(t \in (44/90, 45/90]\)}\\
+\rho_2 \quad &\text{if \(t \in (89/90, 90/90]\)}\\
+0      \quad &\text{otherwise.}
+\end{array} \right.
+\end{align}
+We also have the constraints \(0 \leq \alpha_k(t) \leq 1\) for \(t \in [0, 1]\) and \(R_k \geq 0\) for all \(k\). Any
+reasonable form for \(\alpha_k(t)\), the proportion of resource team \(k\) puts into attacking at time \(t\), may be
+proposed. Here we consider the formulation:
+\begin{align}
+\alpha_k(t) = \left \{
+\begin{array}{ll}
+c_{1} + (d_{1} -c_{1})t     \quad &\text{if team \(k\) is winning at time \(t\)}\\
+c_{0} + (d_{0} - c_{0})t    \quad &\text{if team \(k\) is drawing at time \(t\)}\\
+c_{-1} + (d_{-1} - c_{-1})t \quad &\text{if team \(k\) is losing at time \(t\)}
+\end{array} \right.
+\end{align}
+where \(\alpha_k(t)\) is common to all teams \(k\). This allows us to capture a linear change with time in a team's
+allocation of resource over three different states, which is a novel and interpretable approach for dealing with the
+change in a team's behaviour throughout a match. This model specification is also more parsimonious than that of
+\cite{DixonRobinson1998} and more readily describes how teams adapt their behaviour in response to their current
+situation.
+
+This specification also means that \(\alpha_k(0) = c_i\) and \(\alpha_k(1) = d_i\) where \(i\) is \(-1\), \(0\), or
+\(1\) when the team is losing, drawing, or winning respectively. Thus, constraining \(c_i\) and \(d_i\) to be \(\in [0,
+1]\) will provide the constraint \(0 \leq \alpha_k(t) \leq 1\) for \(t \in [0, 1]\). Inferences on these parameters
+should offer insights into how teams typically react to losing, drawing, or winning throughout a match.
+
+We also test the assumption of linearity in \(\alpha_k(t)\) by considering two more general functions. Firstly, a
+quadratic polynomial function which we denote \(\alpha^{(1)}_k(t)\), specified in order to satisfy \(\alpha^{(1)}_k(0) =
+c_i\) and \(\alpha^{(1)}_k(1) = d_i\) (akin to \(\alpha_k(t)\)), but also \(\alpha^{(1)}_k(0.5) = e_i\), giving three
+additional parameters \(e_{-1}\), \(e_0\), and \(e_1\). The specification of \(\alpha^{(1)}_k(t)\) is therefore:
+\begin{align}
+\alpha^{(1)}_k(t) = \left \{
+\begin{array}{ll}
+c_{1} + (-3c_{1} + 4e_{1} - d_{1})t + (2c_{1} - 4e_{1} +2d_{1})t^2        \quad &\text{team \(k\) winning} \\
+c_{0} + (-3c_{0} + 4e_{0} - d_{0})t + (2c_{0} - 4e_{0} +2d_{0})t^2        \quad &\text{team \(k\) drawing} \\
+c_{-1} + (-3c_{-1} + 4e_{-1} - d_{-1})t + (2c_{-1} - 4e_{-1} +2d_{-1})t^2 \quad &\text{team \(k\) losing}.
+\end{array} \right.
+\end{align}
+We choose this form as opposed to the usual polynomial, \(a + bt + ct^2\), so that \(\alpha^{(1)}_k(t)\) reduces to
+\(\alpha_k(t)\) when \(e_i - 0.5(c_i + d_i) = 0\) for \(i = -1, 0, 1\).
+
+In order to satisfy the constraint, \(0 \leq \alpha^{(1)}_k(t) \leq 1\) for \(t \in [0, 1]\), we firstly constrain \(c_i\),
+\(e_i\), and \(d_i\) to be \(\in [0, 1]\). We then consider the turning points \(t^*_i\) of \(\alpha^{(1)}_k(t)\). If
+\(t^*_i \notin [0, 1]\) then the constraint must be satisfied. Otherwise, when \(t^*_i \in [0, 1]\), the constraint
+is only satisfied when \(0 \leq \alpha^{(1)}_k(t^*_i) \leq 1\).
+
+Secondly, we consider a piecewise linear function which we denote \(\alpha^{(2)}_k(t)\). The function comprises 12
+parameters, four for each of the three game states (losing, drawing, or winning) which define the value of the function
+at times \(0/90\), \(30/90\), \(60/90\), and \(90/90\). We denote the parameters \(f_i^j\) where  \(i\) corresponds to
+the losing, drawing, or winning state, and \(j\) the times \(0/90\), \(30/90\), \(60/90\), and \(90/90\).
+
+\section{Bayesian inference for parameter estimation} 
+\label{sec:Bayesian_inference_for_parameter_estimation}
+
+We now discuss the necessary ingredients for inference in a Bayesian setting of the parameter vectors \(\boldTheta = (h,
+a, c_{-1}, c_{0}, c_{1}, d_{-1}, d_{0}, d_{1}, \rho_1, \rho_2, R_1, \ldots, R_{20})\), \(\boldTheta^{(1)} = (\boldTheta,
+e_{-1}, e_{0}, e_{1})\), and \(\boldTheta^{(2)} = (h, a, f_{-1}^{0/90}, f_{-1}^{30/90}, \ldots, f_{1}^{90/90}, \rho_1,
+\rho_2, R_1, \ldots, R_{20})\). We use the 2010/2011 season data to aid with prior elicitation and then study posterior
+samples taken using data from the 2011/2012 season.
+
+\subsection{The log-likelihood} 
+\label{sec:The_log-likelihood}
+
+We consider data \((H_1, \ldots, H_{380})\) and \((A_1, \ldots, A_{380})\) where \(H_m\) is a set containing the times
+of the home team goals in match \(m\) and \(A_m\) is defined similarly for the away team. Then, conditioning on the
+parameter values and assuming that events in different matches are independent conditional on the parameters, the
+contribution to the log-likelihood from match \(m\) where team \(i\) plays at home against team \(j\) is:
+\begin{equation}
+\begin{split}
+\log(L(\boldTheta; m)) = &-\int_{0}^{1} \lambda_m(t) \, \mathrm{d}t - \int_{0}^{1} \mu_m(t) \, \mathrm{d}t\\ 
+  					     &+\sum_{t \in H_m} \log(\lambda_m(t)) + \sum_{t \in A_m} \log(\mu_m(t)).
+\label{eq:likelihood}
+\end{split}
+\end{equation}
+The log-likelihood for an entire season of matches is then given by:
+\begin{align}
+\log(L(\boldTheta)) = \sum_{m=1}^{380} \log(L(\boldTheta; m)).
+\end{align}
+For a reference on the likelihood for such models, see \cite{cox1966} and \cite{DixonRobinson1998}. The integrals in
+Equation \eqref{eq:likelihood} must be calculated piecewise between goal times which change the state of the match (home
+team winning, a draw, or the away team winning) or change-points in \(\rho(t)\) (\(44/90\), \(45/90\), \(89/90\),
+\(90/90\)) so that the integrands are smooth, continuous functions. For start point \(t_1\) and end point \(t_2\)
+meeting these criteria, and considering the use of the linear function \(\alpha_k(t)\), the integral \(\int_{t_1}^{t_2}
+\lambda_m(t) \, \mathrm{d}t\) can be calculated by first defining the following terms:
+\begin{align} 
+\lambda_m(t) &= e^{g(t)} \\
+g(t)  &= h + \alpha_i(t) R_i - (1 - \alpha_j(t)) R_j + \rho(t) \notag\\
+      &= h + (c_i + (d_i - c_i)t) R_i - (1 - (c_j + (d_j - c_j)t)) R_j + \rho(t) \\
+g'(t) &= (d_i - c_i) R_i + (d_j - c_j)R_j.
+\end{align}
+We then have:
+\begin{align} 
+\int_{t_1}^{t_2} \lambda_m(t) \, \mathrm{d}t &= \int_{t_1}^{t_2} e^{g(t)} \, \mathrm{d}t \\
+										     &= \frac{1}{g'(t)} \left[ e^{g(t)} \right]_{t_1}^{t_2} \\
+										     &= \frac{1}{g'(t)} (e^{g(t_2)} - e^{g(t_1)}) \\
+										     &= \frac{1}{g'(t)} (\lambda_m(t_2) - \lambda_m(t_1))
+\end{align}
+where \(c_i\) is \(c_{-1}\), \(c_0\) or \(c_1\) when team \(i\) is losing, drawing or winning between the times \(t_1\)
+and \(t_2\) respectively, \(d_i\) follows similarly. The calculation of the integral \(\int_{t_1}^{t_2} \mu_m(t) \,
+\mathrm{d}t\) also follows in a similar fashion to that of \(\int_{t_1}^{t_2} \lambda_m(t) \, \mathrm{d}t\).
+
+When considering the function \(\alpha^{(1)}_k(t)\), the integral terms in Equation \eqref{eq:likelihood} must be
+calculated using numerical integration methods (for which we use Simpson's composite rule). For the piecewise linear
+function \(\alpha^{(2)}_k(t)\), the integrals are calculated similarly to when using \(\alpha_k(t)\), but with two
+additional points from which the integral much be computed piecewise between, \(30/90\) and \(60/90\).
+
+\subsection{Simulation of goal times}
+\label{sec:Simulation_of_goal_times}
+
+We discuss here the methodology used for the simulation of goal times from the model, since the notation and ideas
+follow from Section \ref{sec:The_log-likelihood}. 
+
+The simulation of goal times can be performed by rescaling the time axis of a homogeneous process as is described in
+\cite{lewis1979, cinlar2013}. Thus, to simulate the time of a goal from given initial time \(t_1\), we solve the
+following equation for \(t_2\):
+\begin{align}
+\label{eq:simulationIntegral}
+\int_{t_1}^{t_2} (\lambda_m(t) + \mu_m(t)) \, \mathrm{d}t = \tau
+\end{align}
+where \(\tau\) is a random variate drawn from an Exponential distribution with unit rate. We then have that a goal has
+occurred at time \(t_2\) and the process is repeated from this point in time. If \(t_2 > 1\) then no goal is scored
+before the game ends. The simulated goal is identified as being scored by the home team, \(i\), with probability:
+\begin{align}
+p_h = \frac{\lambda_m(t_2)}{\lambda_m(t_2) + \mu_m(t_2)}
+\end{align}
+and so the probability that the goal being scored by the away team, \(j\), is \(p_a = 1 - p_h\). 
+ 
+Again considering the use of the linear function \(\alpha_k(t)\), we have already seen the form of the integral
+\(\int_{t_1}^{t_2} \lambda_m(t) \, \mathrm{d}t\) in Section \ref{sec:The_log-likelihood}, it follows similarly that:
+\begin{align} 
+\int_{t_1}^{t_2} (\lambda_m(t) + \mu_m(t)) \, \mathrm{d}t 
+&= \frac{1}{g'(t)} ((\lambda_m(t_2) + \mu_m(t_2)) - (\lambda_m(t_1) + \mu_m(t_1))) \\
+&= \frac{\bar{\lambda}_m + \bar{\mu}_m}{g'(t)} (e^{g'(t) t_2} - e^{g'(t) t_1})
+\end{align}
+where we consider only times \(t_1\) to \(t_2\) where there are no change-points in \(\rho(t)\) and we define
+\(\bar{\lambda}_m\) and \(\bar{\mu}_m\) as:
+\begin{align} 
+\bar{\lambda}_m &= e^{h + c_i R_i + (c_j - 1) R_j + \rho} \\
+\bar{\mu}_m &= e^{a + c_j R_j + (c_i - 1) R_i + \rho}
+\end{align}
+where \(\rho\) is the (constant) value of \(\rho(t)\) between times \(t_1\) and \(t_2\) so:
+\begin{align} 
+\lambda_m(t) &= \bar{\lambda}_m e^{g'(t) t} \\
+\mu_m(t) &= \bar{\mu}_m e^{g'(t) t}.
+\end{align}
+This yields the solution:
+\begin{align} 
+\label{eq:simulationSolution} 
+t_2 = \frac{1}{g'(t)} \log\left(\frac{\tau g'(t)}{\bar{\lambda}_m + \bar{\mu}_m} + e^{g'(t) t_1}\right).
+\end{align}
+
+Note the solution in Equation \eqref{eq:simulationSolution} is only valid for times \(t_1\) and \(t_2\) which do not
+cross change-points in \(\rho(t)\). The solution for \(t_2\) must be found by checking the integral in
+\eqref{eq:simulationIntegral} from \(t_1\) to future \(\rho(t)\) change-points after \(t_1\) and checking if the
+integral is bigger or smaller than \(\tau\). We can then determine between which change-points the goal time \(t_2\)
+lies and use Equation \eqref{eq:simulationSolution} to find the exact time. Of course, if the goal time is beyond
+change-points, we must account for the value of the integral up to those change-points. For example, if (known) \(t_1 <
+44/90\) and the true (unknown) value of the simulated goal is \(t_2 = 70 / 90\) we would have:
+\begin{align}
+\int_{t_1}^{44/90} (\lambda_{i}(t) + \mu_{j}(t)) \, \mathrm{d}t + 
+\int_{44/90}^{45/90} (\lambda_{i}(t) + \mu_{j}(t)) \, \mathrm{d}t +
+\int_{45/90}^{t_2} (\lambda_{i}(t) + \mu_{j}(t)) \, \mathrm{d}t
+= \tau
+\end{align}
+then in a similar fashion to the derivation of Equation \eqref{eq:simulationSolution}:
+\begin{align} 
+t_2 = \frac{1}{g'(t)} \log\left(\frac{\tau' g'(t)}{\bar{\lambda}_i + \bar{\mu}_j} + e^{g'(t) 45/90}\right)
+\end{align}
+where:
+\begin{align} 
+\tau' = \tau - \left(
+\int_{t_1}^{44/90} (\lambda_{i}(t) + \mu_{j}(t)) \, \mathrm{d}t + 
+\int_{44/90}^{45/90} (\lambda_{i}(t) + \mu_{j}(t)) \, \mathrm{d}t
+\right).
+\end{align}
+
+Since the model explicitly simulates goal times, it can be used in practice to estimate the probability of any event
+defined by the times of goals for the two competing teams in a match. Thus, assuming we can approximate the posterior
+distribution of the model parameters \(\boldTheta\), we may use these simulation methods in order to approximate the
+posterior predictive distribution \(\hat{p}(\Delta | \data)\). We typically take \(\Delta\) to be the random variable
+which denotes the outcome of a particular match (home team win, draw, or away team win), but also consider match
+scorelines in Section \ref{sec:Goodness_of_fit}. Again, \(\data\) denotes the observed data.
+ 
+In this chapter (and throughout the thesis) we use sampling methods to approximate the posterior distribution of the
+model parameters, for each sample we then simulate goal times for a single match and count the proportion of occurrences
+of our events of interest (the possible outcomes of \(\Delta\)) in order to calculate \(\hat{p}(\Delta | \data)\).
+
+When considering the function \(\alpha^{(1)}_k(t)\) we must use numerical methods for the simulation of goal times,
+which follows from the integration in Section \ref{sec:The_log-likelihood} being analytically intractable. When
+considering the piecewise linear function \(\alpha^{(2)}_k(t)\), the simulation of goal times is similar to
+\(\alpha_k(t)\) when accounting for the two additional change-points in time, \(30/90\) and \(60/90\).
+
+\subsection{Prior choice}
+\label{priorChoice}
+
+We use data from the 2010/2011 season to determine suitable prior distributions as follows:
+\begin{equation}
+\begin{aligned}[c]
+h      &\sim N(0.4, 0.5^2) \\
+a      &\sim N(0.08, 0.5^2) \\
+\rho_1 &\sim N(1.098, 0.5^2) \\
+\rho_2 &\sim N(1.504, 0.5^2) \\
+\end{aligned}
+\qquad\qquad
+\begin{aligned}[c]
+c_i   &\sim B(1.5, 1.5) \text{ for } i \in \{-1, 0, 1\} \\
+e_i   &\sim U(0, 1) \text{ for } i \in \{-1, 0, 1\} \\
+f_i^j &\sim U(0, 1) \text{ for } i \in \{-1, 0, 1\}, \text{ for all } j\\
+d_i   &\sim B(3, 1) \text{ for } i \in \{-1, 0, 1\}.
+\end{aligned}
+\end{equation}
+We note here that the prior parameters are chosen to reflect knowledge on past \gls{EPL} data, under the Bayesian paradigm.
+The choice of specific prior parameter values is explained below.
+
+We recall that parameters \(\rho_1\) and \(\rho_2\) account for higher counts of goals (in reality scored in injury
+time) recorded as occurring in the 45-th and 90-th minute. A reasonable estimate, in the absence of data (injury time minutes
+are not recorded in the data), for the amount of injury time typically played in the first and second half is 2 and 3.5
+minutes respectively. This suggests that there is typically a 3 and 4.5 minute window in which goals can be recorded as
+45 and 90 respectively (for example in the first half, the minute of 44 to 45 plus the 2 minutes extra injury time).
+Thus, we choose \(\rho_1\) and \(\rho_2\) to increase the rate of scoring by an average factor of 3 and 4.5, which is
+achieved by proposing prior means of \(\log(3) = 1.098\) and \(\log(4.5) = 1.504\) respectively.
+
+The prior standard deviations for \(\rho_1\) and \(\rho_2\) were given the value 0.5 which results in fairly vague prior
+distributions, in that 95\% prior credible intervals are \((0.1186,\ 2.0786)\) and \((0.5241,\ 2.4841)\), corresponding
+to an increase in the rates of scoring by a factor of \((1.1260,\ 7.9932)\) and \((1.6889,\ 11.9898)\) respectively.
+
+We can then define a base scoring rate for the home and away teams defined here by \(h\) and \(a\). In the absence of
+all other parameters, \(h\) and \(a\) would provide a constant scoring rate for home and away teams respectively,
+effectively reducing the model to a simple Poisson model. Maximum likelihood estimates of \(h\) and \(a\) are then
+0.48470 (0.04026) and 0.16015 (0.04735) respectively (standard errors shown in brackets) using data from the 2010/2011
+season. However, these point estimates do not account for parameters \(\rho_1\) and \(\rho_2\) which both serve to
+increase the rate of scoring for 1 minute each. We therefore round the prior mean for \(h\) down to 0.4 and decrease the
+prior mean for \(a\) a similar amount to 0.08. We also inflate the standard error estimates by a factor of over 10 to
+0.5 for use as the prior standard deviation. This is to account for additional uncertainty in how the prior means of
+\(h\) and \(a\) were estimated.
+
+The prior distributions for \(c_i\) and \(d_i\) are chosen to be fairly non-informative. Other authors
+(\cite{DixonRobinson1998}) and betting markets have suggested that there are more goals in the second half than the
+first, consistent with teams becoming more attack-minded as a match progresses (\(c_i < d_i\)). We use the model
+parameter estimates to determine whether this phenomenon is indicated by our data. Since the parameter \(e_i\) is used
+to test the assumption of linearity in \(\alpha_k(t)\), we choose to give it a non-informative prior over the allowable
+parameter range. However, when using the function \(\alpha^{(1)}_k(t)\) we must consider the joint prior \(p(c_i, e_i,
+d_i)\) which is zero when the constraints in Section \ref{model} are not satisfied and otherwise proportional to
+\(p(c_i) p(e_i) p(d_i)\). Similarly, we place a non-informative uniform prior on the \(f_i^j\) parameters.
+
+We now discuss the prior that we propose for the resource parameters \(\boldR = (R_1, \ldots, R_{20})\).
+
+\subsection{A prior for R using ranking information} 
+\label{sec:A_prior_for_R}
+
+%&= f(R_1) \sum_{\omega \in \Omega} p(\omega) e^{-\gamma_1 D'_1(\omega)} e^{-\gamma_2 D'_2(\omega)} 
+% where \(\Omega\) is the set of all \(20!\) possible orderings of \(\boldR\), and the functions \(D'_1(\omega)\) and
+% \(D'_2(\omega)\) count the number of adjacent swaps relating to surviving and newly promoted teams respectively for a
+% particular ordering \(\omega\). Thus, \(p(\omega)\) denotes the probability of ordering \(\omega\) given a particular
+% value of \(R_1\) and the gamma density \(f(R_k)\) for \(k = 2, \ldots, 20\). For example, if \(R_1 = 10\) then the
+% probability of an ordering which does not place \(R_1\) as the largest value is very unlikely since we specify
+% \(\alpha = 2\) and \(\beta = 4\) in the gamma density.
+
+For the resource parameter vector \(\boldR\), a prior which uses only the team's ranking from a previous season is
+adopted. This small amount of data provides enough information to create an informative prior, producing a simple method
+to incorporate previous team rankings into parameter inference. The joint prior distribution for the teams' resource
+parameters is given by:
+\begin{align}
+p(\boldR) \propto f(R_1) \ldots f(R_{20}) e^{-\gamma_1 D_1(\boldR)} e^{-\gamma_2 D_2(\boldR)}
+\end{align}
+where \(D_1(\boldR)\) and \(D_2(\boldR)\) are functions which measure the distance between the ordering of \(\boldR\)
+and a pre-specified prior order. In this example, our prior order is simply the ordering of the previous season's league
+table, where \(D_2(\boldR)\) relates to newly promoted teams, \(D_1(\boldR)\) relates to `surviving' teams, and
+\(f(R_k)\) is the gamma \gls{PDF} at point \(R_k\) with hyperparameters \(\alpha\) and \(\beta\).
+
+Here, \(e^{-\gamma_1 D_1(\boldR)}\)  and \(e^{-\gamma_2 D_2(\boldR)}\) are terms (whose magnitude is
+determined by the value of \(\gamma_1\) and \(\gamma_2\)) that penalise differences between the order induced by
+\(\boldR\) and the previous season's league positions. Conceivably, the performance of this model is improved by
+having a smaller penalty on the resource of newly promoted teams (\(\gamma_1 > \gamma_2\)) reflecting our uncertainty in
+how the newly promoted teams will perform in the \gls{EPL}. A plausible option for the placing of teams promoted from
+the Championship in positions 1, 2, and 3 is in positions 18, 19, and 20 of the Premiership.
+
+We choose the functions \(D_1(\boldR)\) and \(D_2(\boldR)\) to count the minimum number of adjacent swaps made
+to transform the ordering of \(\boldR\) into the same order as the previous season's league table. Swaps which
+involve one of the three newly promoted teams contribute to \(D_2(\boldR)\), otherwise swaps contribute to
+\(D_1(\boldR)\). For example, if the previous season ended with Manchester United and Chelsea in 1st and 2nd place
+respectively, and in \(\boldR\) the top two values were \(R_{Manchester United} = 1.2\) and \(R_{Chelsea} = 1.5\)
+then there would be 1 swap (contributing to \(D_1(\boldR)\) since neither of these teams was newly promoted) to
+put both of these teams in the correct order.
+
+Algorithm \ref{swapAlgo} implements the functions \(D_1(R)\) and \(D_2(R)\) in a similar fashion to a bubble swap
+algorithm.
+% Algorithm \ref{swapAlgo} implements the functions \(D_1(R)\) and \(D_2(R)\). The vector \(\boldsymbol{P}\) contains
+% the rankings of the teams according to the previous season's league standings, and the vector \(\boldsymbol{O}\)
+% contains the rankings of the teams according to the vector \(\boldR\). We iterate i through 1 to 19 and check if the
+% team with ranking i (firstTeam) and i+1 (secondTeam) in \(\boldsymbol{O}\) (such that \(O_\text{firstTeam} =
+% O_\text{secondTeam} - 1\)) matches the pairwise ranking in the vector \(\boldsymbol{P}\). If \(P_\text{firstTeam} >
+% P_\text{secondTeam}\) is true (the teams are round the wrong way) then the teams positions are swapped in
+% \(\boldsymbol{O}\), occurrences of which contribute to either \(D_1(\boldR)\) (D1 in Algorithm \ref{swapAlgo}) or
+% \(D_2(\boldR)\) (D2 in Algorithm \ref{swapAlgo}). This process is repeated until no swaps are made (meaning
+% \(\boldsymbol{P} = \boldsymbol{O}\)) in a similar fashion to a bubble swap algorithm.
+\begin{algorithm}
+\caption{\label{swapAlgo} Swap algorithm function} 
+\begin{algorithmic}[1]
+
+\Function{swaps}{D1, D2, $\boldR$}
+
+\State D1 = 0
+\State D2 = 0
+
+\State \LineComment{index i of \(\boldsymbol{P}\) is previous league position of team i}
+\State \(\boldsymbol{P}\) = previousSeasonPositions() 
+
+\State \LineComment{index i of \(\boldsymbol{O}\) is ranking of team i in \(\boldR\)}
+\State \(\boldsymbol{O}\) = positions(\(\boldR\))
+\State
+
+\State madeSwaps = true
+\While{madeSwaps}
+  \State madeSwaps = false
+  \For{i = 1 to 19}
+    \State firstTeam = teamInPosition(i, \(\boldsymbol{O}\))
+    \State secondTeam = teamInPosition(i + 1, \(\boldsymbol{O}\))
+    \If{\(P_\text{firstTeam} > P_\text{secondTeam}\)}
+      \State madeSwaps = true
+      \State \(O_\text{firstTeam} = O_\text{firstTeam} + 1\)
+      \State \(O_\text{secondTeam} = O_\text{secondTeam} - 1\)
+      \If{$P_\text{firstTeam} < 18$ \&\& $P_\text{secondTeam} < 18$}
+	    \State D1 = D1 + 1;
+	  \Else
+	    \State D2 = D2 + 1;
+      \EndIf
+    \EndIf
+  \EndFor
+\EndWhile
+
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+We set the gamma density parameters in \(f(R_k)\) to \(\alpha = 2\) and \(\beta = 4\). This choice of prior parameters
+ensures that the difference between the resource parameters is not too large, as one would expect in a highly
+competitive league such as the EPL. Furthermore, the gamma density also naturally provides the constraint \(R_k \geq 0\)
+for all \(k\).
+
+To illustrate the properties of the joint prior on the team resources, we simulate from it using a random-walk \gls{MH}
+algorithm. Figure \ref{fig:marginals} and Figure \ref{fig:bivariate} portray the characteristics of the prior with
+\(\gamma_1 = 1\) and \(\gamma_2 = 0.5\) from 200,000 samples for randomly chosen teams.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{marginal-prior}
+\caption{Marginal plots of samples from \(R_k\) for Manchester United, Arsenal, Everton, and Wolverhampton Wanderers}
+\label{fig:marginals}
+\end{center}
+\end{figure} 
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{bivariate-prior}
+\caption{Bivariate plots of samples from \(\boldR\) plotted using hexagonal bins. The darker red hexagons represent a
+higher count of samples in that bin}
+\label{fig:bivariate}
+\end{center}
+\end{figure}
+We also show that the marginal density of the prior for \(R_k\) is continuous. Let us consider \(p(R_1)\), the
+marginal distribution of \(R_1\):
+\begin{align} 
+p(R_1) &\propto \int_0^\infty \ldots \int_0^\infty f(R_1) \ldots f(R_{20}) e^{-\gamma_1 D_1(\boldR)} e^{-\gamma_2
+D_2(\boldR)} \, \mathrm{d}R_2 \ldots\mathrm{d}R_{20} \notag\\
+&= f(R_1) \int_0^\infty \ldots \int_0^\infty f(R_2) \ldots f(R_{20}) e^{-\gamma_1 D_1(\boldR)} e^{-\gamma_2
+D_2(\boldR)} \, \mathrm{d}R_2 \ldots\mathrm{d}R_{20}.
+\end{align}
+Now, this is the expectation of the penalty term \(e^{-\gamma_1 D_1(\boldR)} e^{-\gamma_2 D_2(\boldR)}\) with respect to
+the \gls{PDF} \(f(R_2) \ldots f(R_{20})\) and so by defining \(\boldR' = (R'_2, \ldots, R'_{20})\) with \(R'_k \sim
+\Gamma(\alpha, \beta)\) for all \(k\) independently we have:
+\begin{align} 
+p(R_1) &\propto f(R_1) \E_{\boldR'}(e^{-\gamma_1 D_1((R_1, \boldR'))} e^{-\gamma_2 D_2((R_1, \boldR'))})
+\end{align}
+where we use the notation \(\E_{\boldR'}\) to clarify that the expectation is with respect to \(\boldR'\). The gamma
+density function and the expectation of the penalty term must be continuous in \(R_1\) and thus \(p(R_1)\) must be also.
+In contrast to the continuous marginals (samples from which are displayed in Figure \ref{fig:marginals}), Figure
+\ref{fig:bivariate} highlights the discontinuity of the prior density for \(\boldR\) in a bivariate setting, there is a
+clear discontinuity on the line \(y=x\).
+
+We treat \(\gamma_1\) and \(\gamma_2\) as tuning parameters which are determined using past data (here from the
+2010/2011 season, as with the prior parameters discussed in Section \ref{priorChoice}) in an analogous approach to the
+tuning parameter, \(\lambda\), in ridge or lasso regression (see for example \cite{tibshirani1996} or \cite{hastie2009}
+which suggest determining the optimal value of \(\lambda\) by cross-validation). In our context it is natural to choose
+a fixed value of \(\gamma_1\) and \(\gamma_2\) in order to maximise the model's one-week-ahead predictive ability. The
+methodology for doing so is as follows: 
+
+For each of the 38 match weeks in the 2010/2011 \gls{EPL} season we sample from the joint posterior distribution of the
+parameter space \(\boldsymbol{\theta}\) using a random-walk \gls{MH} algorithm where the log-likelihood contains data up
+to but not including the match week \(w\) for which we wish to make predictions. We then estimate the posterior
+probability of the observed match results in week \(w\) (as per Section \ref{sec:Simulation_of_goal_times}) and record
+the value of the logarithmic scoring rule (see \cite{dawid2012, gneiting2007}), \(LSR_w\) for each week \(w\):
+\begin{align}
+LSR_w = \sum_{m \in M_w} \log(\hat{\Prob}(O_m | \data_{w-1}))
+\label{eq:LSR}
+\end{align}
+where \(M_w\) is the set of 10 matches in week \(w\), \(O_m\) is the observed outcome of match \(m\) (either a home
+team win, draw, or away team win), and \(\data_{w-1}\) is the observed data up to but not including week \(w\). This
+process is repeated for differing combinations of \(\gamma_1\) and \(\gamma_2\).
+
+We estimated the quantity \(LSR_w\) for each week \(w = 1, \ldots, 38\) with 40,000 posterior samples (after a 5,000
+sample burn) and thus estimated \(\sum_{w=1}^{38} LSR_w\) which represents the model's forecasting power over the whole
+season. Optimal values were found empirically when \(\gamma_1 = \log(2)\) and \(\gamma_2 = \log(1.5)\). We also noted
+that once \(\gamma_1\) and \(\gamma_2\) become sufficiently large the difference in \(\sum_{w=1}^{38} LSR_w\) becomes
+negligible as the probability of accepting any orderings of the teams that contradict the previous seasons order in the
+\gls{MCMC} is effectively zero.
+
+\subsection{Inference results}
+\label{sec:Inference results}
+
+Firstly, in Figure \ref{non-linear} we display the posterior distributions of \(e_i - 0.5(c_i + d_i)\) for \(i = -1,
+0, 1\) using 100,000 posterior samples after a 5,000 sample burn. The function \(\alpha^{(1)}_k(t)\) reduces
+to \(\alpha_k(t)\) when \(e_i - 0.5(c_i + d_i) = 0\) and the plots show no compelling evidence against this for any
+\(i\). 
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{non-linear}
+\caption{Density histograms of the posterior samples for \(e_i - 0.5(c_i + d_i)\) for \(i = -1\) (top), \(i = 0\)
+(middle), and \(i = 1\) (bottom)}
+\label{non-linear}
+\end{center}
+\end{figure}
+Secondly, we show plots of 1,500 posterior samples from the functions \(\alpha_k(t)\), \(\alpha^{(1)}_k(t)\), and
+\(\alpha^{(2)}_k(t)\) in Figure \ref{alphaBayesian}. Only a small number of samples are shown to avoid plot rendering
+issues.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{alphaBayesian3}
+\caption{Transparent plots of 1,500 posterior samples from the functions \(\alpha_k(t)\) (top), \(\alpha^{(1)}_k(t)\)
+(middle), and \(\alpha^{(2)}_k(t)\) (bottom) for the states losing, drawing, and winning. \protect\redSolidLine\ the
+posterior mean}
+\label{alphaBayesian}
+\end{center}
+\end{figure}
+The plots do not display any real evidence against the suitability of the linear function. Thus for the remainder of the
+thesis we solely consider the use of the linear function \(\alpha_k(t)\).
+
+We now explore the posterior distribution of the model parameters, again, using data from the 2011/2012 season.
+Visualisations of 100,000 posterior samples (again with 5,000 sample burn) of the team resource parameters are displayed
+in Figure \ref{Rposterior} and Figure \ref{Rankings}. Histogram estimates and trace plots are displayed in Figure
+\ref{MCMCplots1} and Figure \ref{MCMCplots2} for the 10 non-resource model parameters, with a corresponding summary
+shown in Table \ref{posteriorTable}.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{Rposterior}
+\caption{A violin plot of the marginal posterior distribution of the teams' resources (\(R_k\) for team \(k\)). The
+teams have been ordered by the posterior mean of their resource}
+\label{Rposterior}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp] 
+\begin{center}
+\includegraphics[width = 14cm]{rankings}
+\caption{A plot displaying the posterior distribution of a ranking of the teams based on the parameter vector
+\(\boldR\). Darker regions represent areas of higher posterior probability and again, the teams have been ordered by
+the posterior mean of their resource. \protect\blackFilledCircle\ denote the final league position of the teams in
+the 2011/2012 season}
+\label{Rankings}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{MCMCplots1}
+\caption{Trace plots and density histograms of the posterior samples for parameters \(h\), \(a\), \(c_{-1}\), \(c_0\),
+and \(c_{1}\)}
+\label{MCMCplots1}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{MCMCplots2}
+\caption{Trace plots and density histograms of the posterior samples for parameters \(d_{-1}\), \(d_0\), \(d_{1}\),
+\(\rho_1\), and \(\rho_2\)}
+\label{MCMCplots2}
+\end{center}
+\end{figure}
+%
+% \begin{figure}[htp]
+% \begin{center}
+% \includegraphics[width = 13cm]{MCMCplots3}
+% \caption{Density histograms of the posterior samples for \(h - a\), \(d_{-1} - c_{-1}\), \(d_{0} - c_{0}\), \(d_{1} -
+% c_{1}\). Note the y-axis varies between plots}
+% \label{MCMCplots3}
+% \end{center}
+% \end{figure}
+%
+\begin{table}
+\centering
+\fbox{
+\begin{tabular}{*{4}{c}}
+  parameter  & mean   & median & 95\% BCI \\
+  \hline
+  \(h\)      & \(0.3277\) & \(0.3281\) & \((0.1965, 0.4542)\)  \\
+  \(a\)      & \(0.0591\) & \(0.0598\) & \((-0.0783, 0.1923)\) \\
+  \(c_{-1}\) & \(0.4779\) & \(0.4766\) & \((0.0906, 0.8836)\)  \\
+  \(c_0\)    & \(0.2083\) & \(0.2071\) & \((0.0552, 0.3695)\)  \\
+  \(c_1\)    & \(0.2635\) & \(0.2526\) & \((0.0416, 0.5569)\)  \\
+  \(d_{-1}\) & \(0.7415\) & \(0.7501\) & \((0.4400, 0.9787)\)  \\
+  \(d_0\)    & \(0.7137\) & \(0.7119\) & \((0.5319, 0.9047)\)  \\
+  \(d_1\)    & \(0.7481\) & \(0.7474\) & \((0.5435, 0.9525)\)  \\
+  \(\rho_1\) & \(1.2740\) & \(1.2747\) & \((1.0045, 1.5391)\)  \\
+  \(\rho_2\) & \(1.5169\) & \(1.5188\) & \((1.2766, 1.7480)\)  \\
+\end{tabular}
+}
+\caption{\label{posteriorTable} A summary of posterior estimates for the 10 non-resource model parameters}
+\end{table}
+
+The relative ability of each team, as suggested by the marginal posterior distribution of each team's resource, \(R_k\),
+is displayed in Figure \ref{Rposterior} through a violin plot. A violin plot is similar to a box-plot but includes a
+kernel density estimate reflected in the horizontal axis to provide a clearer comparison of multiple densities on a
+single plot.
+
+Figure \ref{Rankings} displays the ranking of each team according to the posterior distribution of the parameter vector
+\(\boldR\). That is, each posterior sample taken indicates a ranking of the teams from best to worst, and
+the posterior distribution of the ranking can be estimated from the entire MCMC output. For each team, this distribution is
+shown in the plot using shading across each row of the graph. It can be seen that each team's resource largely lies in a
+single ranking position, although the newly promoted teams (Norwich, Swansea, and Queens Park Rangers) are more free to
+explore other ranks. The plot suggests that Norwich and Swansea may be better teams than suggested by Figure
+\ref{Rposterior}, where their posterior mean resource was comparatively low.
+
+To test whether or not there is a significant home advantage, that is, \(h > a\), it is not sufficient to simply check
+the posterior summaries in Table \ref{posteriorTable}. There may be correlation in the joint posterior distribution of
+\(\boldsymbol{\theta}\) so we consider the posterior probability that \(h > a\). This probability is found to be unity
+from which we conclude that a home advantage clearly exists. The same applies for comparison of the parameters \(c_i\)
+and \(d_i\), for which we estimate posterior probabilities of \(0.8210\), \(0.99996\), and \(0.9914\) in \(d_i > c_i\)
+for \(i = -1\), \(0\), and \(1\) respectively. Thus, it is clear that teams generally allocate more resource to attack
+as a match progresses, showing that this model contains the observation that more goals are typically scored later in a
+match (as found by \cite{DixonRobinson1998}). Finally, Table \ref{posteriorTable} displays a suggestion that teams play
+differently when losing near the start of a match. One might expect teams to play more offensively when they are in a
+losing state, and this is captured by the parameter \(c_{-1}\) which on averages is around twice that of its
+drawing and winning counterparts, \(c_0\) and \(c_1\).
+
+In Figure \ref{inplay} we display the dynamics of the model by showing the instantaneous rates of scoring,
+\(\lambda_m(t)\) and \(\mu_m(t)\), for one particular match  \(m\) between Manchester City (the home team) and Queens
+Park Rangers (the away team) in the last week of the 2011/2012 season. The posterior mean,
+\(\boldsymbol{\bar{\theta}}\), was used to calculate the rates for simplicity of display. We admit that using such a
+point estimate is somewhat against Bayesian methodology, but it does allow us to convey the dynamics of the model
+clearly. The plot visually conveys the extent at which the rates of scoring change when the winning, losing, or drawing
+state changes, along with a gradual increase in scoring rates throughout the match. Furthermore, this match featured two
+home team goals in second half injury time (recorded as having occurred at minute 90), which coincide with increased
+rates of scoring due to the parameter \(\rho(t)\).
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{inplay}
+\caption{A plot of \(\lambda_m(t)\) (\protect\redSolidLine) and \(\mu_m(t)\) (\protect\blueDashedLine) for match
+\(m\) where Manchester City (\(i\)) played Queens Park Rangers (\(j\)). \protect\graySolidLine\ denotes goal times, the
+resulting score in the form \(i\) - \(j\) is annotated}
+\label{inplay}
+\end{center}
+\end{figure}
+We revisit this particular match in more detail in Chapter \ref{ch:A_Utility_Based_Model} Section
+\ref{sec:Manchester_City_3-2_Queens_Park_Rangers}.
+
+\gls{MCMC} convergence was checked via Gelman-Rubin diagnostics (\cite{gelman1992, brooks1998}) and can be seen in Table
+\ref{gelmanrubin}. The diagnostics show no indication of the \gls{MCMC} procedure not converging to the desired
+stationary distribution. The multivariate potential scale reduction factor was 1.0024 - sufficiently close to 1.
+\begin{table}
+\centering
+\fbox{
+\begin{tabular}{lcc}
+parameter & point estimate & upper CI \\
+\hline
+\(h\)                           & 1.00012   & 1.00029 \\
+\(a\)                           & 1.00042   & 1.00123 \\
+\(c_{-1}\)                      & 1.00010   & 1.00036 \\
+\(c_0\)                         & 1.00007   & 1.00025 \\
+\(c_1\)                         & 1.00001   & 1.00005 \\
+\(d_{-1}\)                      & 1.00013   & 1.00050 \\
+\(d_0\)                         & 1.00032   & 1.00084 \\
+\(d_1\)                         & 1.00036   & 1.00125 \\
+\(\rho_1\)                      & 1.00006   & 1.00021 \\
+\(\rho_2\)                      & 1.00024   & 1.00082 \\
+\(R_{Arsenal}\)                 & 1.00021   & 1.00040 \\
+\(R_{Aston Villa}\)             & 1.00021   & 1.00072 \\
+\(R_{Blackburn Rovers}\)        & 1.00033   & 1.00115 \\
+\(R_{Bolton Wanderers}\)        & 1.00118   & 1.00412 \\
+\(R_{Chelsea}\)                 & 1.00039   & 1.00133 \\
+\(R_{Everton}\)                 & 1.00019   & 1.00053 \\
+\(R_{Fulham}\)                  & 1.00064   & 1.00188 \\
+\(R_{Liverpool}\)               & 1.00053   & 1.00176 \\
+\(R_{Manchester City}\)         & 1.00013   & 1.00049 \\
+\(R_{Manchester United}\)       & 1.00034   & 1.00115 \\
+\(R_{Newcastle United}\)        & 1.00110   & 1.00338 \\
+\(R_{Norwich City}\)            & 1.00026   & 1.00087 \\
+\(R_{Queens Park Rangers}\)     & 1.00028   & 1.00089 \\
+\(R_{Stoke City}\)              & 1.00092   & 1.00294 \\
+\(R_{Sunderland}\)              & 1.00068   & 1.00188 \\
+\(R_{Swansea City}\)            & 1.00094   & 1.00289 \\
+\(R_{Tottenham Hotspur}\)       & 1.00029   & 1.00082 \\
+\(R_{West Bromwich Albion}\)    & 1.00044   & 1.00155 \\
+\(R_{Wigan Athletic}\)          & 1.00025   & 1.00086 \\
+\(R_{Wolverhampton Wanderers}\) & 1.00043   & 1.00159 \\
+\end{tabular}
+}
+\caption{\label{gelmanrubin} Potential scale reduction factors from Gelman-Rubin's convergence diagnostic obtained from
+three chains}
+\end{table}
+
+\subsection{Goodness of fit}
+\label{sec:Goodness_of_fit}
+
+Using the methods described in Section \ref{sec:Simulation_of_goal_times}, we can use our posterior samples to simulate
+match scorelines for all 380 matches of the season and examine their distribution, effectively providing a posterior
+predictive check on the goodness of fit of the model. For each of 40,000 posterior samples we simulate the scores of a
+single season and thus estimate the posterior predictive expectation of the number of occurrences of each score in a
+season:
+\begin{align} 
+\boldsymbol{E} = \bordermatrix{
+  &    0    &    1     &    2     &    3     &    4    \cr
+0 & 26.4008 & 28.52860 & 18.51570 & 8.86340  & 3.48027 \cr
+1 & 35.3997 & 42.09020 & 24.84920 & 11.17730 & 4.08060 \cr
+2 & 28.5913 & 30.80390 & 18.48740 & 7.53418  & 2.60033 \cr
+3 & 16.8721 & 17.14380 &  9.36785 & 3.78510  & 1.17815 \cr
+4 &  8.1698 &  7.77698 &  3.97843 & 1.45443  & 0.44690 
+}. \label{expectedScores}
+\end{align}
+The expected frequencies of scores \(\boldsymbol{E}\) can be compared to the observed frequency of score lines:
+\begin{align}
+\boldsymbol{O} = \bordermatrix{
+  & 0  & 1  & 2  & 3  & 4 \cr
+0 & 27 & 20 & 21 & 7  & 3 \cr
+1 & 33 & 45 & 34 & 8  & 2 \cr
+2 & 30 & 30 & 14 & 11 & 1 \cr
+3 & 21 & 23 & 7  & 5  & 0 \cr
+4 & 9  & 4  & 2  & 1  & 2
+} \label{observedScores}
+\end{align}
+where entry \(i, j\) in the matrix refers to the score \(i\) to \(j\), so the home team scores are across rows and the
+away team scores are across columns. Scores where a team has scored more than four goals have not been displayed to save
+space, but are used in all calculations.
+
+Informally, apart from score lines of 3-0 and 3-1, the observed and expected scores appear to conform. A more formal
+test however, is obtained by calculating a \(\chi^2\) type statistic for each of our simulated seasons based on the
+difference between the simulated score lines in that season (denoted \(\boldsymbol{S}_i\) from simulation \(i\)) and the
+expected score lines in matrix \(\boldsymbol{E}\). We define the following \(\chi^2\) type statistic between matrices
+\(\boldsymbol{X}\) and \(\boldsymbol{Y}\) representing the observed and expected scores respectively:
+\begin{align}
+\chi^2(\boldsymbol{X}, \boldsymbol{Y}) = \sum_{i=0}^{20} \sum_{j=0}^{20} I(Y_{i, j} \geq 5)
+\frac{(X_{i, j} - Y_{i, j})^2}{Y_{i, j}} + \frac{(X' - Y')^2}{Y'}
+\end{align}
+where:
+\begin{align}
+X' &= \sum_{i=0}^{20} \sum_{j=0}^{20} I(Y_{i, j} < 5) X_{i, j} \\
+Y' &= \sum_{i=0}^{20} \sum_{j=0}^{20} I(Y_{i, j} < 5) Y_{i, j}
+\end{align}
+so that score lines with expectation less than five are grouped.
+
+For a further 40,000 simulations we calculate \(\chi^2_i = \chi^2(\boldsymbol{S}_i, \boldsymbol{E})\).
+In essence, we are treating each \(\boldsymbol{S}_i\) as an observed set of score lines and examining the distribution
+of \(\chi^2_i\) for \(i = 1, \ldots, 40,000\). We can then see how the statistic \(\chi^2 = \chi^2(\boldsymbol{O},
+\boldsymbol{E})\) fits into this distribution, or rather if the observed score lines \(\boldsymbol{O}\), fit in with a
+typical simulation from the model.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{chiSqStats}
+\caption{A density histogram of the simulated \(\chi^2_i\) statistics. \protect\redSolidLine\ the overall \(\chi^2\)
+statistic}
+\label{chiSqStats}
+\end{center}
+\end{figure}
+Figure \ref{chiSqStats} shows no evidence against the model's ability to capture the structure of the distribution of
+score lines, since the observed \(\chi^2\) statistic lies at the mode of the distribution of \(\chi^2_i\).
+
+\section{Model comparisons} 
+\label{sec:Model_comparisons}
+
+We now compare our proposed non-homogeneous Poisson process model (denoted M) to three other models on the basis of their
+ability to forecast match outcome results one-week-ahead in the \gls{EPL} 2011/2012 season. The competing models are as
+follows: the model of \cite{DixonRobinson1998} (described in Section \ref{DR}) with parameter estimation in a classical
+framework as in their paper (denoted DR), the Bradley-Terry model (described in Section \ref{BTC}) with parameter
+estimation in a classical framework (denoted BTC), and the Bradley-Terry model with parameter estimation in a Bayesian
+framework using a similar ranking prior to that described in Section \ref{sec:A_prior_for_R} (denoted BTB).
+
+To reiterate, the DR model was chosen as a competing model as it is the closest relative of our proposed model, and the
+Bradley-Terry type models have been selected since we are assessing model performance based on ability to forecast the
+home win, draw, away win outcomes, which the Bradley-Terry models directly calculate.
+
+To obtain maximum likelihood estimates of the parameters in models BTC and DR we use the C\texttt{++} optimisation library
+`NLopt' (\cite{nlopt2010}). To obtain posterior samples of the parameters in the BTB model we use following prior
+distributions:
+\begin{align}
+p(\boldsymbol{S}) \propto f(S_1) \ldots f(S_{20}) \exp(-\gamma_1 D_1(\boldsymbol{S})) \exp(-\gamma_2
+D_2(\boldsymbol{S}))
+\end{align}
+where \(\boldsymbol{S} = (S_1, \ldots, S_{20})\) is the team ability parameter and \(f(S_k)\) is the normal density
+given by \(f(S_k) \propto \exp(-\frac{(S_k - \mu)^2}{2 \sigma^2})\). The hyperparameters \(\mu\) and \(\sigma^2\) are
+common for all teams with \(\mu = 0\) and \(\sigma^2 = 5^2\) being used. Prior distributions for parameters \(h\) and
+\(\delta\) are given by \(h \sim N(0.35, 1^2)\) and \(\delta \sim \Gamma(3, 5)\).
+These are chosen to reflect the belief that a home advantage (\(h > 0\)) is likely and to give realistic probabilities
+of a draw. If \(h = 0.35\) and the competing teams have equal ability, \(S_i = S_j\), then a 95\% prior credible interal
+for \(\delta\) is \((0.1237, 1.4449)\) which corresponds to draw probabilities of 0.0599 and 0.6068, with a reasonable
+value being 0.2833 when \(\delta\) is 0.6 (the prior mean). Optimal values for \(\gamma_1\) and \(\gamma_2\) for model
+BTB were found at \(\gamma_1 = \log(3.5)\) and \(\gamma_2 = \log(1.5)\) using the same methods as in Section
+\ref{sec:A_prior_for_R}.
+
+We chose to begin the comparisons on week six, since after five weeks of matches, the graph, in which vertices are teams
+and edges link teams that have played each other, becomes connected - a necessary condition for identifiability of the
+team-ability model parameters. That is, pairs of teams who have yet to play each other are nevertheless comparable by
+virtue of their links to teams that they have both already played against. Thus, the comparisons use 330 matches of the
+\gls{EPL} 2011/2012 season. The home team win, draw and away team win probabilities are estimated by simulation of match
+outcomes for model M and model DR, and calculated directly for the two Bradley-Terry models BTC and BTB.
+
+\subsection{Comparison using a scoring rule}
+\label{sec:Comparison_using_a_scoring_rule}
+
+We calculate the modelling approach performance metric \(LSR_w\) (Equation \eqref{eq:LSR}) for weeks 6 to 38 in the
+season. The overall forecasting ability of each of the models for the whole season can be seen in Table
+\ref{metricTable}.
+\begin{table}
+\centering
+\fbox{
+\begin{tabular}{*{2}{cc}}
+  model & \(\sum_{w=6}^{38} LSR_w\) & \(GM_{6, 38}\)\\ 
+  \hline
+  M & \(-324.26\)   & 0.3743 \\ 
+  DR & \(-337.24\)  & 0.3599 \\ 
+  BTC & \(-357.04\) & 0.3389 \\ 
+  BTB & \(-334.56\) & 0.3628
+\end{tabular}
+}
+\caption{\label{metricTable} A comparison of the four competing models in terms of the sum of the logarithmic scoring
+rule and the geometric mean of the one-week ahead predicted probabilities for the match outcomes that were actually
+observed, for weeks 6 to 38}
+\end{table}
+We also show the value of:
+\begin{align} 
+GM_{6, 38} = \exp(\frac{1}{330} \sum_{w=6}^{38} LSR_w)
+\end{align}
+which is the geometric mean of the one-week ahead predicted probabilities for the match outcomes that were actually
+observed - enabling perhaps a more intuitive notion of magnitude of the difference in forecasting ability between the
+models.
+
+It is clear that the model we have proposed (M) exhibits the best performance as measured by this particular procedure.
+The results also highlight potential advantages from adopting a Bayesian approach when informative prior distributions
+can be used, which is often the case in modelling of sporting events, as evidenced by the comparative performance of
+models BTC and BTB.
+
+We also suggest a test of the significance of the differences in \(\sum_{w=6}^{38} LSR_w\) by considering the sampling
+distribution of \(LSR_w\) for each of the four models. This is non-trivial since the \(LSR_w\) values do not form an
+\gls{IID} sample. That is, for weeks \(w = 7, \ldots, 38\) we cannot assume the sampling distribution of \(LSR_w\) is
+the same as \(LSR_{w-1}\). The pairs of competing teams are different in each week \(w\) and furthermore, the model
+prediction for the observed outcome of match \(m\) in week \(w\) (\(\hat{\Prob}(O_m | \data_{w-1})\)) which is used to
+calculate \(LSR_w\) depends on the results in the previous weeks (\(\data_{w-1}\)). We thus consider \(H_0\): the
+distribution of \(LSR_w\) given \(\data_{w-1}\) is approximately equal for all four models each week \(w\), against
+\(H_1\): the distribution of \(LSR_w\) is different for at least one of the models each week \(w\). \(H_0\) may only
+state that the distributions are approximately equal since each model predicts different probabilities for the outcomes
+of each match, and so one could immediately prove that the distribution of \(LSR_w\) is slightly different under each
+model.
+
+We sample from the distribution of \(\sum_{w=6}^{38} LSR_w\) under \(H_0\) by iterating through weeks \(w = 6, \ldots,
+38\) and for each \(w\) we randomly choose \(LSR_w\) under one of the four models. This was repeated 100,000 times and
+the resulting histogram estimate is shown in Figure \ref{fig:scoring-rule-sample}.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{scoring-rule-sample}
+\caption{A density histogram of \(\sum_{w=6}^{38} LSR_w\) under \(H_0\): the distribution of \(LSR_w\) given
+\(\data_{w-1}\) is approximately equal for all four models each week \(w\). Individual model estimates of
+\(\sum_{w=6}^{38} LSR_w\) are denoted by \protect\blueSolidLine\ M, \protect\redSolidLine\ DR, \protect\greenSolidLine\
+BTC, \protect\blackSolidLine\ BTB}
+\label{fig:scoring-rule-sample} 
+\end{center}
+\end{figure}
+There is clear evidence that \(\sum_{w=6}^{38} LSR_w\) calculated using the estimated probabilities of model M is
+different (and preferable in terms of performance) from the other models, as the value \(-324.26\) sits very much on the
+upper tail of the distribution of \(\sum_{w=6}^{38} LSR_w\) under \(H_0\).
+
+A natural question that one might ask after seeing Figure \ref{fig:scoring-rule-sample} is `what happens if you remove
+model BTC which is clearly performing worse than the others?' We display the corresponding plot, for which model BTC was
+omitted from the sampling procedure, in Figure \ref{fig:scoring-rule-sample2}.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{scoring-rule-sample2}
+\caption{A density histogram of \(\sum_{w=6}^{38} LSR_w\) under \(H_0\): the distribution of \(LSR_w\) given
+\(\data_{w-1}\) is approximately equal for the three best performing models each week \(w\). Individual model estimates
+of \(\sum_{w=6}^{38} LSR_w\) are denoted by \protect\blueSolidLine\ M, \protect\redSolidLine\ DR,
+\protect\blackSolidLine\ BTB}
+\label{fig:scoring-rule-sample2}
+\end{center}
+\end{figure}
+Again, \(\sum_{w=6}^{38} LSR_w\) calculated using the estimated probabilities of model M sits on the upper tail of the
+distribution of \(\sum_{w=6}^{38} LSR_w\) under \(H_0\). The corresponding p-value, \(\Prob(\sum_{w=6}^{38} LSR_w >
+-324.26 | H_0)\), is 0.0072.
+
+The results of this test also show that if one wished to maximise \(\sum_{w=6}^{38} LSR_w\) by using some combination of
+the four models over the weeks \(w\), then selecting to use model M each every week \(w\) provides an almost optimal
+solution.
+
+\subsection{A Hosmer-Lemeshow type test}
+
+A further test of models involves grouping based on the values of estimated probabilities with the aim of assessing the
+performance of the models over different ranges of predicted probability. The test is similar to multiple separate
+Hosmer-Lemeshow tests (\cite{hosmer2013}) in its grouping based on predicted probabilities and comparison of observed
+and expected occurrences in each group.
+
+We define the following notation. Let \(\mathbb{P}(E_m)\) denote a model's predicted probability of event \(E\) in match
+\(m\), \(I\) denote a probability interval (of the form \((x, y]\)), \(\mathcal{M}_{I, E}\) denote the set of matches
+\(m\) such that \(\mathbb{P}(E_m) \in I\) (note that the set \(\mathcal{M}_{I, E}\) may contain different matches for
+the same \(I\) when a different model's predicted probabilities are used), and \(X_{\mathcal{M}_{I, E}}\) denote a
+random variable which counts the frequency of event \(E\) in the set of matches \(\mathcal{M}_{I, E}\), of which we
+observe the value \(O_{\mathcal{M}_{I, E}}\). Using a particular model we have expectation and variance:
+\begin{align} 
+\E(X_{\mathcal{M}_{I, E}}) &= \sum_{m \in \mathcal{M}_{I, E}} \Prob(E_m) \\
+\V(X_{\mathcal{M}_{I, E}}) &= \sum_{m \in \mathcal{M}_{I, E}} \Prob(E_m) (1 - \Prob(E_m)).
+\end{align}
+We use a normal approximation to obtain a 95\% prediction interval around \(\mathbb{E}(X_{\mathcal{M}_{I, E}})\) and
+compare this to \(O_{\mathcal{M}_{I, E}}\). The end-points in each probability interval \(I\) are chosen to ensure that
+for each of the four models, \(\mathcal{M}_{I, E}\) always contained at least 34 matches, in line with the
+Hosmer-Lemeshow test which determines the end-points based on probability deciles (33 observations in each of 10
+probability intervals). Results of the test are summarised in Figure \ref{bins}. The test does not show any
+evidence against the fit of model M since the observed frequencies are consistent with the prediction interval for all
+probability intervals \(I\) and types of event \(E\). However it can be seen that the other models may be
+underperforming in certain ranges of predicted probability where the observed frequencies are outwith the 95\%
+prediction intervals.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{bins}
+\caption{A plot of \(O_{\mathcal{M}_{I, E}}\) and a 95\% prediction interval around \(\E(X_{\mathcal{M}_{I,
+E}})\) for the events \(H\) (top), \(D\) (middle), and \(A\) (bottom). In each probability interval \(I\),
+\(O_{\mathcal{M}_{I, E}}\) is denoted by (\protect\blueFilledCircle), (\protect\redFilledCircle),
+(\protect\greenFilledCircle), and (\protect\blackFilledCircle) for models M, DR, BTC, and BTB respectively, the 95\%
+prediction interval follows similarly}
+\label{bins} 
+\end{center}
+\end{figure}
+
+\subsection{Use of models to inform betting strategies}
+\label{sec:Use_of_models_to_inform_betting_strategies}
+
+As mentioned in Chapter \ref{ch:Introduction} Section \ref{sec:Bookmaking}, bookmakers add over-round into their
+estimated probabilities on which their published odds are based. There may nevertheless be scope to make profit when
+betting against bookmakers when their estimated probability of an event is low.
+
+We study the performance of the models when they are used to inform a naive strategy for selecting bets against UK
+bookmaker Bet365. We simply place a single unit bet on event \(E\) in match \(m\) if \(\Prob_m(E) > 1 / d_{m, E}\)
+where \(\Prob_m(E)\) is a model's estimated probability and \(1 / d_{m, E}\) is the bookmaker's estimated
+probability plus over-round (\(p_{m, E} + o_{m, E}\)). We discuss the significance of any of the model's betting profits
+via a hypothesis test.
+
+Consider \(H_0\): the bookmaker's estimated probabilities are correct, against \(H_1\): the use of model probabilities
+gives the bettor an advantage over the bookmaker. We sample from the distribution of betting profit for each of the
+model's portfolio of bets under \(H_0\). In order to do so we firstly uncover the bookmaker's underlying probabilities
+by assuming \(o_{m, H} = o_{m, D} = o_{m, A} = K_m\) and thus:
+\begin{align} 
+K_m      &= \frac{1}{3} \left(\frac{1}{d_{m, H}} + \frac{1}{d_{m, D}} + \frac{1}{d_{m, A}} - 1 \right) \\ 
+p_{m, E} &= \frac{1}{d_{m, E}} - K_m.
+\end{align}
+The probabilities are then used to simulate match outcomes for the 330 matches under consideration. This is repeated
+100,000 times, recording each time the profit from each model's portfolio of bets, providing samples from the
+distributions of profit using the respective models. We also calculate the profit of each model's portfolio of bets for
+the observed match outcomes, determining the quantile of this value with respect to each model's distribution of profit
+under \(H_0\).  This yields a p-value, \(\Prob(P > O_P)\), the probability that the profit under \(H_0\) exceeds
+the observed profit, \(O_P\).
+
+Results are displayed in Table \ref{betTable} which also shows the expected profit using each model under \(H_0\). Model
+M achieves the highest profit betting against the bookmaker and furthermore is the only model which shows significant
+evidence against \(H_0\) at the 5\% level.
+\begin{table}
+\centering
+\fbox{ 
+\begin{tabular}{*{4}{c}}
+  model & \(O_P\) & \(\E(P)\) & \(\Prob(P > O_P)\) \\
+  \hline
+  M   & 60.33 & -37.61 & 0.0045 \\ 
+  DR  & 17.47 & -30.50 & 0.0640 \\ 
+  BTC & 1.43  & -25.07 & 0.1685 \\ 
+  BTB & -6.09 & -25.36 & 0.2310 \\ 
+\end{tabular}
+}
+\caption{\label{betTable} The results of the hypothesis test \(H_0\): the bookmaker's estimated probabilities are
+correct, against \(H_1\): the use of model probabilities gives the bettor an advantage over the bookmaker}
+\end{table}
+What is somewhat counter-intuitive, is that model BTB performs particularly poorly on this test. We previously noted in
+Section \ref{sec:Comparison_using_a_scoring_rule} that BTB performed better than BTC based on forecasting ability - and
+one might then expect model BTB to achieve greater betting profits than BTC. In this instance the opposite is true, but
+we note that betting profits are very sensitive to the placement of only a small number of bets. For example the
+difference in betting profits between models BTC and BTB of 7.52 could be due to the differing placement of a single
+bet. It is for this reason we suggest a test of the statistical significance of any observed betting profits.
+ 
+The naive betting strategy can be generalised by considering a difference in the product of the model estimated
+probability and the bookmaker's odds. We can impose a stricter betting strategy which only places bets when the product
+exceeds a certain value. That is we place a single unit bet on event \(E\) in match \(m\) if:
+\begin{align} 
+\Prob_m(E) d_{m, E} = \frac{\Prob_m(E)}{p_{m, E} + o_{m, E}} > r.
+\end{align}
+A similar betting strategy is discussed in \cite{DixonColes1997} where the model estimated probabilities are only
+profitable when \(r > 1.1\). In Figure \ref{fig:profit} we display the profit \(O_{P, r}\) for differing values of \(r\)
+using each of the four model's estimated probabilities.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{profit}
+\caption{A plot of the observed profit \(O_{P, r}\) for varying levels of \(r\) and when using estimated probabilities
+from each of the four models. \protect\blueSolidLine\ M, \protect\redSolidLine\ DR, \protect\greenSolidLine\ BTC,
+\protect\blackSolidLine\ BTB}
+\label{fig:profit} 
+\end{center}
+\end{figure}
+As would be expected after the results of the simpler betting strategy, model M almost always provides the largest
+profit. The plot however shows that a greater profit is achievable for all models using a value of \(r\) in the region
+of 1.2, of course, one would need to determine the optimal value of \(r\) before the test to avoid using the data twice.
+
+Figure \ref{fig:profit} also displays the dynamics of the betting strategy as \(r\) varies, in that as \(r \rightarrow
+0\), the strategy selects all possible bets, and due to the over-round present in the odds, makes a certain loss. Also,
+as \(r\) becomes larger, the strategy selects fewer bets, to the point of selecting none, and the profit is 0.
+
+We are also aware of more complex betting strategies, such as the Kelly betting criterion (\cite{kelly1956}) which
+suggests a fraction of the betters bankroll to bet dependant on the estimated probability and the bookmaker's odds -
+with the aim of maximising the expected log-utility of the bettor's bankroll. More recently, work has appeared in the
+literature extending the Kelly betting criterion to the case of multiple simultaneous events (\cite{whitrow2007}). For a
+bettor wishing to place bets on matches in the \gls{EPL}, this would prove to be most useful since, as mentioned in
+Chapter \ref{ch:Introduction} Section \ref{sec:The_English_Premier_League}, matches often take place concurrently.
+
+We choose however to not investigate the optimal betting strategies further, since the focus of this thesis is the
+statistical modelling which can be used to inform betting strategies, rather than the design of the strategies
+themselves.
+
+% We also consider a the very well-known Kelly betting criterion (\cite{kelly1956}). The criterion suggests placing a bet
+% of size \(f^* B\) on any event \(E\) when \(\Prob_m(E) > 1 / d_{m, E}\), where \(B\) is the bettor's current bankroll
+% and:
+% \begin{align}
+% f^* = \frac{\Prob_m(E) d_{m, E} - 1}{d_{m, E} - 1} 
+% \end{align}
+% is the fraction of the bankroll which should be wagered.
+
+\section{Concluding remarks} 
+\label{sec:Concluding_remarks_adaptive}
+
+In this chapter we have described a non-homogeneous Poisson process model for modelling the goal times of competing
+teams in the \gls{EPL}. The model is able to capture a linear change with time in a team's behaviour over the states
+losing, drawing, and winning. It is also more parsimonious than earlier models in the literature, thus more readily
+lending itself to novel inference methods.
+
+We have shown that there may be several advantages using the ranking-based prior proposed in Section
+\ref{sec:A_prior_for_R}, most notably by the difference in performance between the Bradley-Terry models in the classical
+and Bayesian frameworks. One other advantage is that an appropriate team ranking could be easily given by combining
+expert opinion and/or past data and could therefore be chosen in order to account for team changes between seasons. Thus
+the ranking-based prior provides a simple method for an expert to specify prior distributions. The ranking-based prior
+can also easily be adapted to other sports, for example tennis where rankings could simply be determined from the tennis
+world rankings at the start of the analysis.
+
+The model developed here also outperformed a related model described by \cite{DixonRobinson1998} based on one-week-ahead
+predictive accuracy, and it was also shown that our model is capable of making a significant profit when used to bet
+against a large UK bookmaker.
+
+We now move onto more practical considerations for the inference of our non-homogeneous Poisson process model, and also
+present an addition to the model which allows the team resource parameters to vary dynamically throughout a season, as
+was deemed beneficial by \cite{Owen2011}.

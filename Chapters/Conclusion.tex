@@ -1,0 +1,154 @@
+
+\singlespacing
+
+\chapter{Conclusion}
+\label{ch:Conclusion}
+
+\onehalfspacing
+
+\section{Results and discussion}
+
+At the beginning of this thesis, we described four main aims regarding the development of modelling approaches in
+association football. To reiterate in short, they are:
+\begin{enumerate}
+\item The creation of models which are widely applicable, have improved predictive power, and are more parsimonious than
+models currently in literature
+\item Inference of models in a Bayesian framework so that prior knowledge can be exploited and parameter uncertainty
+accounted for
+\item Methods of inference which are quick to compute
+\item The creation of models which can capture behavioural aspects of teams
+\end{enumerate}
+
+Throughout this thesis we have shown examples of numerous Bayesian methods of inference, for example \gls{MH}, particle
+filtering methods, and \gls{RJMCMC}. We have suggested benefit in these methods which allow the addition of extra
+information into the model inference process via prior distributions, perform parameter updating very quickly, and also
+naturally inform model choice/model averaging decisions. Not only this but the Bayesian framework easily accounts for
+uncertainty in parameter estimation through the posterior distribution. We strongly feel that the Bayesian framework
+should be strongly considered when performing inference of sports related models - and hope that this thesis has shown
+some of the many benefits.
+
+In Chapter \ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} of the
+thesis we presented a novel non-homogeneous Poisson process model which we then presented several modifications to in
+Chapters \ref{ch:Fast_updating_of_dynamic_and_static_parameters_using_particle_filters} and
+\ref{ch:A_Utility_Based_Model} (some more potential modifications are discussed below). The model is more parsimonious
+than similar models in literature by defining each team's ability by a single team-specific parameter (which we called
+the `resource'), as opposed to a team-specific attack and defense parameter (\cite{Maher1982, DixonColes1997,
+DixonRobinson1998}). This simpler model was shown to outperform other models in the literature based on a number of
+tests, largely concerning one-week-ahead forecasting ability. Furthermore, since the model can be used to simulate match
+goal times, it can be used to make predictions around any event which is defined by goal times - of which the vast
+majority of betting markets comprise.
+
+We displayed how particle filtering methods could be employed to update posterior distributions extremely quickly and
+efficiently, and also how they could cope with a mixture of static and dynamic model parameters. Similarly to
+\cite{Owen2011}, we proposed a model whereby the team resource parameters were allowed to vary dynamically throughout a
+season, in contrast however, we found no compelling evidence that this addition to the model was beneficial for our
+(different to that of \cite{Owen2011}) test data. The superior computational speed of particle filtering methods however
+allows users to practically update posterior distributions while matches are being played. Clearly useful if one wished
+to have the most up-to-date parameter estimates during matches for betting or other purposes.
+
+Finally, in terms of the results of the thesis, we presented a final extension to the model which included modifying the
+team resource allocation parameter (\(\alpha_k(t)\)) in order to account for current league position and obtainable
+league positions. This is indeed a new and novel behavioural aspect which previous models in literature have not been
+able to fully capture. Model inference then suggested that teams may indeed play in order to avoid ending the season in
+position 5 (which grants qualification to the Europa League) by noting a local minimum in the estimated utility function
+at this position. That is, there is some evidence to suggest that controversially, teams in the \gls{EPL} would rather
+finish the season in position 6 than 5. Furthermore, we showed (via an example of a a match between Manchester City and
+Queens Park Rangers in the final week of the season) how the model captures the change in behaviour of teams as they
+react to news from other concurrent matches which affects their league situation. The change in behaviour was shown to
+have a large real effect on the rates of scoring, in one example increasing the scoring rate by almost 50\%, and thus
+has clear implications for certain betting markets.
+
+% Statistical models for sporting outcomes are becoming increasingly in demand with the increase in data collected for
+% sports. We naturally consider one of the most popular sports, association football, but similar models may be applicable
+% for other sports, for example hockey. The models discussed in this thesis are of most use for betting purposes, and are
+% largely interpretable by modelling the behaviour of teams.
+% 
+% We have shown that the model in it's most basic form is capable of of producing a profit when betting against a large UK
+% bookmaker, Bet365, and furthermore discussed methods in which model inference (which can inform betting strategies)
+% could be practically undertaken between and during matches. The model also outperformed several other models, including
+% the model of \cite{DixonRobinson1998}, when tested on one-week-ahead predictive performance.
+
+Statistical models all make assumptions, either explicit or implicit, and indeed ours is no exception to this. We note
+some of our modelling assumptions here:
+\begin{enumerate}
+  \item Red cards have no effect
+  \item The perception of utility is common across all teams
+  \item With regards to the match situation (and not the league situation), teams only consider whether they are
+  winning, drawing, or losing
+  \item With regards to the league, teams consider positions which can be reached following the scoring of at
+  most two more goals for either team
+\end{enumerate}
+
+The first point portrays the main limitation of the model, that it should not be used for prediction during in-play
+matches for which a player has been dismissed via a red card, and that the model likelihood does not explicitly account
+for matches which have contained red cards. Whilst relatively rare events, and typically occurring at later times in
+matches, red cards \textit{surely} effect the scoring rate during matches. Somewhat surprisingly however,
+\cite{volf2009} did consider red cards as a covariate in a Poisson process model for goal times and found it to be
+non-significant (a confidence interval for the coefficient contained the value 0).
+
+Having the scoring rates of the competing teams depend on red cards would add another dimension of complexity to the
+model. Simulation of matches would require not only the simulation of goal times, but also cards. With our aim to create
+parsimonious models, for which inference and prediction was computationally efficient, we chose to not add red card
+information - in line with many authors in the literature concerning the modelling of association football outcomes
+(for example \cite{DixonColes1997, DixonRobinson1998, mchale2011}).
+
+The remaining three points concern our formulation of the team resource allocation parameter (\(\alpha_k(t)\)) for which
+we discuss potential modifications for below. With one of the aims of this thesis to create parsimonious models which
+are still capable of capturing a large variety of effects, we always opted for the simplest sensible formulation
+possible. We thus assumed that all teams react the same way to league or match position, as opposed to specifying up to
+20 team-specific behavioural parameters. At first we also only consider whether a team was losing, drawing, or winning
+during a match, which is intuitive and also largely agrees with the modelling of \cite{DixonRobinson1998} who
+additionally considered different formulations for when the match score was 0-1 or 1-0. However with the addition of the
+league utility considerations into the model, the model considers all score lines attainable through the scoring of up
+to two more goals for either team, as well as the winning, drawing, or losing state.
+
+\section{Future work}
+
+Evolution of statistical models in sport often comes as experts in the sport suggest effects which statistical models
+should be able to capture. In this thesis, we, for example, hypothesised that teams should change their behaviour based
+on the league situation, and were able to specify a model formulation which could capture said effects. There are many
+other effects which an expert would suggest a statistical model for association football should be able to capture. This
+is both a blessing and a curse. On one hand there are always ideas for how to specify your next model, on the other,
+whatever model you can think of will have something that it doesn't account for or is misspecified or misrepresented.
+This ties in quite nicely with a well-known quote from \cite{box1987}, `all models are wrong, but some are useful'. This
+is why research on statistical models for sport will evolve as long as sport itself does.
+
+To extend the utility based model presented in Chapter \ref{ch:A_Utility_Based_Model} one might look at ways of adding
+an idea of `match importance' (\cite{scarf2008}) into the function \(\beta(w)\) so that teams play in accordance to
+their league position when the match is considered important with regards to the league. Unfortunately, the raw ideas of
+\cite{scarf2008} would not be usable, some other form of `match importance' would need to be formulated.
+
+More generally, there are many factors which the function resource allocation function \(\alpha_k(.)\) could account
+for, for example any linear or non-linear interaction of in-play data such as number of corners kicks, number of
+throw-ins, number of shots, number of passes, or number of yellow/red cards. One might also expect that different teams
+react differently depending on the match state, and also whether or not they are the home or away team. For example we
+would expect a strong team at home to react differently to weak team away when they are in the losing state.
+Many sporting experts will have (likely differing) opinions on how these data imply changes to the rates of scoring/the
+team behaviour in a match - and as these data become more readily available it is likely that statistical models will
+appear in literature which account for them all.
+
+More complex models may also require more complex \gls{MCMC} algorithms in order to perform inference efficiently.
+Hamiltonian \gls{MCMC} (see for example \cite{neal2011}) is one such algorithm, and it is becoming more popular due to
+recent developments in the program Stan (\cite{stan}) which implements Hamiltonian \gls{MCMC} while maintaining a very
+similar user interface to WinBUGS. In addition, model comparison will always be a difficult topic, and information
+criteria other than \gls{DIC} could also be considered, for example the \gls{WAIC} (see \cite{vehtari2015}).
+
+Somewhat unfortunately, historical in-play betting odds data are not currently easily accessible. This is where one
+might expect betting strategies informed by statistical models to be most profitable, due to the continuously changing
+odds as the match unfolds and particular events (namely goals) occur. In particular we would expect the model to be
+profitable if the bookmaker odds were manually driven. Our non-homogeneous Poisson process model would naturally be able
+to provide predicted probabilities for events of matches as they are in-play, although one would need to be careful in
+the cases where matches contain `red-card' events, as mentioned above. The first research to appear in the literature
+showing the potential profits of in-play, statistical model informed, betting strategies could be truly ground breaking,
+and could also be worrying news for bookmakers.
+
+Finally, one might also consider the use of a similar non-homogeneous Poisson process model for the occurrences of
+points in other sports. For example Rugby Union where teams divide their resource between attempting to score a try or a
+penalty kick/drop goal. In a similar fashion, American football teams may divide their resource between attempting to
+score field goals or touchdowns, which suggests an potential extension to the point-process model of \cite{baker2013}.
+Ice Hockey is another popular sport where such a model could be effective - in particular since Ice Hockey teams are
+known to behave particularly offensively when losing in the final minutes of a match, and often deploy their goalkeeper
+as an extra attacking player in an attempt to score (this tactic however most often leads to conceding a goal).
+
+
+

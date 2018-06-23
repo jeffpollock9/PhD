@@ -1,0 +1,63 @@
+
+\singlespacing
+\chapter*{Abstract}
+\onehalfspacing
+
+This thesis presents advances in modelling and inference for match outcomes in the association football English Premier
+League. We firstly extend earlier models by introducing a behavioural aspect which can be used to investigate how teams
+react to the state of play in a match. We show that the model, in its simplest form, outperforms existing models and is
+able to select a portfolio of profitable bets against a bookmaker. Secondly, we introduce a dynamic component to the
+model by allowing team ability parameters to vary stochastically in time. We employ particle filtering methods to cope
+with a mixture of static and dynamic parameters and find that the updating of posterior distributions is particularly
+fast, a necessary attribute should we wish to update parameter estimates while matches are in-play. Furthermore, it is
+shown that the methods are able to recover model parameters based on simulated league data. Finally, we propose an
+extension to the model so that we are able to investigate how a team modifies its behaviour based on their league
+situation. We consider league positions that are closely attainable and suggest that since teams modify their behaviour
+based on their current league position, outcomes of different matches are not necessarily independent.
+ 
+% This thesis represents advances in modelling and inference for match outcomes in the association football English
+% Premier League. We firstly introduce an inhomogeneous Poisson-process model for the scoring times of competing home and
+% away teams in association football matches which simplifies earlier models by representing a team's ability as a finite
+% resource to be partitioned between attack and defence. The model represents behavioural aspects; in particular, we use
+% the model to investigate whether and how teams modify their behaviour in response to the state of play in a match. We
+% adopt a Bayesian approach to parameter estimation and, through the use of a novel prior, we take account of both
+% historic information on team performance and current form in inferences of parameters and prediction of team
+% performance. Using data from the English Premier League, we demonstrate that the model provides realistic predictions of
+% the probabilities associated with match outcomes and can potentially highlight instances where bookmaker's odds may be
+% underpriced.
+% 
+% Secondly, a class of techniques known as the particle filter is considered which provide Bayesian methods for updating
+% our posterior belief around a dynamic system of parameters as new data becomes available. The dynamic system consists of
+% parameters representing the resource/strength of each team in the English Premier League and thus readily allows for the
+% teams' abilities to vary through time. In addition, there are static model parameters present which are also updated via
+% particle filtering methods as the new data is observed. Special algorithms are necessary to allow for the combination of
+% dynamic and static model parameters. We show that particle filtering methods allow for rapid updates of parameter
+% posterior belief and can accurately track an unobserved dynamic system.
+% 
+% Finally, we extend the inhomogeneous Poisson-process model for the scoring times of competing home and away teams in
+% association football matches so that each team's rate of scoring also depends on their current league situation. The
+% model allows the interpretation of a utility value on the different league positions, where teams play offensively to
+% score goals in order to reach positions of higher utility, or defensively in order to prevent conceding and moving to
+% positions of lower utility. The framework suggests that concurrent matches are not independent, and news from one match
+% can potentially affect the behaviour of teams in another. We employ various Bayesian techniques in order to perform
+% inference and use data from five English Premier League seasons. We find plausible results regarding the utility of each
+% league position, and furthermore, evidence that concurrent matches are not independent.
+
+% \singlespacing
+% \chapter*{Dedication}
+% \onehalfspacing
+%
+% For Livingston Football Club. I will continue this work until I have saved up enough money to buy you some good players.
+
+\singlespacing
+\chapter*{Acknowledgements}
+\onehalfspacing
+
+I'd like to thank my supervisors, Professor Gavin Gibson and Doctor George Streftaris, from whom I have learned much
+during my PhD.
+
+On a more personal level, I'd like to thank my mum Margaret, my sister Emily, and my partner Lavinia, for pretending
+to listen to me talk about a mixture of football and statistics for the past three years.
+
+
+

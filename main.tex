@@ -1,0 +1,100 @@
+\documentclass[a4paper, 12pt]{report}
+
+\usepackage{amsmath, amssymb, graphicx, tikz, pgfplots, algorithmicx, algorithm, algpseudocode, titlesec, changepage,
+setspace, eurosym, fixltx2e, fancyhdr, parskip}
+\usepackage[hyphens]{url}
+\usepackage[utf8]{inputenc}
+\usepackage[authoryear, round]{natbib}
+\usepackage[notindex, nottoc, notlof, notlot]{tocbibind} 
+\usepackage[top=20mm, bottom=20mm, left=40mm, right=20mm]{geometry}
+\usepackage[plainpages=false, breaklinks]{hyperref}
+\usepackage[nonumberlist]{glossaries}
+\hypersetup{ 
+    colorlinks = true,
+    linktoc = all,
+    citecolor = black,
+    linkcolor = black,
+    urlcolor = black
+}
+\pgfplotsset{compat = 1.12}
+
+\input{Glossaries}
+\input{Functions}
+
+\graphicspath{
+	{Figures/}
+	{Chapter_Introduction/ggFigures/}
+	{Chapter_Adaptive/ggFigures/}
+	{Chapter_Particle/ggFigures/}
+	{Chapter_Utility/ggFigures/}
+	}
+ 
+\newcommand{\auth}{Jeffrey Pollock}
+\newcommand{\thesistitle}{Statistical Modelling And Bayesian Inference For Match Outcomes And Team Behaviour In
+Association Football}
+\newcommand{\degree}{Doctor of Philosophy} 
+\newcommand{\supdate}{September 2015}          
+
+\begin{document}
+
+\pagestyle{empty}
+\begin{center}
+\begin{spacing}{2}
+{\large{\ \\  \vspace{1.5cm}\textbf{\MakeUppercase{\thesistitle}}}}\\
+\end{spacing}
+\vfill
+{\Large\textit{by}}\\\vspace{0.2cm}
+{\Large\upshape{\auth}}\\\vspace{1.0cm}
+\includegraphics[width=3.5cm]{Figures/LogoBlack.jpg}\\
+\vspace{1cm}
+{\large Submitted for the degree of \\ \degree}\\
+\vspace{1cm}
+{\large\textsc{Department of Actuarial Mathematics \& Statistics}\\
+\textsc{School of Mathematical and Computer Sciences}\\
+\textsc{Heriot-Watt University}}\vfill
+{\large{\supdate}}
+\end{center}
+{\small The copyright in this thesis is owned by the author. Any quotation from the report or use of any of the
+information contained in it must acknowledge this report as the source of the quotation or information.}
+
+\clearpage
+\pagestyle{plain}
+
+\clearpage
+\pagenumbering{roman}
+
+\input{Chapters/Preface}
+\tableofcontents
+\listoftables
+\listoffigures
+\renewcommand*{\glsgroupskip}{}
+\printglossary % remember to run makeglossaries main after pdflatex for this to work!
+ 
+\clearpage
+\pagenumbering{arabic}
+
+\pagestyle{fancy}
+\fancyhead{}
+\lhead{\fontsize{11}{12}\selectfont \textit \leftmark}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.0pt}
+\renewcommand{\footrulewidth}{0.0pt}
+\renewcommand{\chaptermark}[1]{
+\markboth{\chaptername\ \thechapter:\ #1}{}
+} 
+ 
+\input{Chapters/Introduction}
+\input{Chapters/Bayesian-Methods}
+\input{Chapters/Adaptive-Model}
+\input{Chapters/Particle-Filter}
+\input{Chapters/Utility-Model}
+\input{Chapters/Conclusion}
+ 
+\appendix
+\renewcommand{\chaptermark}[1]{\markboth{Appendix \thechapter.\ #1}{}}
+\input{Chapters/Appendix}
+
+\bibliography{ref}
+\bibliographystyle{agsm}
+
+\end{document}

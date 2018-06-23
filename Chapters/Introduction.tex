@@ -1,0 +1,375 @@
+
+\singlespacing
+
+\chapter{Introduction}
+\label{ch:Introduction}
+
+\onehalfspacing
+
+\section{An overview of gambling in sport}
+\label{sec:An_overview_of_gambling_in_sport}
+
+Gambling has been a hugely popular activity throughout human life, and has recorded mentions in ancient Roman and Greek
+history. While the practice of gambling has been frowned upon or even illegal in certain periods of time or locations
+over the globe, in recent times in the UK gambling (under regulation) has been widely accepted by the public. Most UK
+high streets now contain at least one bookmaking office (shop) and even more gambling is done online. Horse racing and
+association football (commonly referred to as \textit{soccer} in the United States and football elsewhere) are the most
+gambled upon sports in the UK, with sports like tennis and greyhound racing also being popular.
+
+After a government go-ahead in 1960, UK bookmaking offices began to open in 1961 with the aim of ending unregulated,
+illegal gambling. Before then, bets could only be legally placed at racing tracks. The number of bookmaking offices
+quickly grew, and in 2013 was estimated at around 8,700 (\cite{bettingShops}). It is however thought that the number of
+bookmaking offices is declining due to the popularity of on-line gambling.
+
+Founded in 2000, Betfair (\url{https://www.betfair.com/exchange}) offered the first on-line sports betting exchange. It
+allowed bettors to act either as a traditional bettor, `backing' an event, or act in the traditional role of the
+bookmaker, `laying' an event. This allowed bettors to bet against each other and thus offer better odds than a
+bookmaker. Bookmakers typically worked an expected profit of around 15\% into their odds, whereas Betfair would only
+take a small percentage (around 5\%) of any winnings. An example of the Betfair exchange can be seen in Figure
+\ref{fig:betfairOdds}, which shows the market of a race at the hugely popular Royal Ascot.
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width = 14cm]{betfairOdds2}
+  \caption{\label{fig:betfairOdds} A screenshot of the Betfair exchange showing available back and lay odds for the
+  runners of the 14:30 at Royal Ascot}
+\end{center}
+\end{figure}
+The Figure shows the odds which are available to back (in bold under `Back all') and the amount of money which is in the
+exchange at those odds (directly underneath the odds). Similarly, the odds which you can lay are shown. The screenshot
+was taken about an hour before the start of the race, and already the exchange had matched bets up to a total value of
+\pounds575,652. It is not uncommon to see several millions matched on big horse racing or association football markets.
+
+Somewhat in response to Betfair, high street bookmakers had to invest in websites which easily allowed on-line gambling
+(as we will see in the forthcoming section) and also operated at a lower expected profit, in order to offer competitive
+odds. This led to a massive increase in turnover for bookmakers as many people are not comfortable with the Betfair
+exchange and prefer a simpler betting approach with a bookmaker. This also suggests an additional opportunity for
+bettors, betting against high street bookmakers who now offer better odds.
+
+\section{Gambling in association football}
+\label{sec:Gambling_in_association_football}
+
+The first popular association football bet in the UK was known as the `football pools'. Littlewoods football pools was
+the first of its kind, beginning in 1923 when the football pools coupons were offered outside Manchester United's ground
+Old Trafford. The bet quickly spread across the whole of the UK, probably because, for a small stake the bet offered the
+chance of a share of a massive jackpot (pool of money). The aim of the bet was to select the outcome of several matches
+which at the time, were all played concurrently at 3pm on a Saturday. More recently, since association matches are
+televised, matches occur at different times during the week, although the bulk are played in the traditional 3pm
+Saturday slot. At its peak of popularity, it is estimated around that the pools had around 10 million players in the UK,
+this figure however severely plummeted following the introduction of the UK national lottery in 1994, which offered even
+bigger jackpots. It is also likely that bettors now favour association football bets with bookmakers, who can offer odds on a
+much larger selection of events.
+
+Bookmakers now offer a large number of association football betting markets to customers. This is no real surprise since
+to quote \cite{constantinou2012}, `[association football] is the world's most popular sport \ldots\ and constitutes the
+fastest growing gambling market'. Some of the most popular betting markets are: `1X2' (also called match betting), in
+which the bettor chooses the final outcome of the match (home team win, draw, or away team win), `total goals
+under/over', in which the bettor chooses if the total number of match goals will be under or over a certain line
+(usually 2.5), and `correct score', in which the bettor chooses the exact final score in the form x-y. There are also
+more obscure betting opportunities, for example betting on the number of corners in the last 15 minutes of a match. In
+fact, as can be seen in Figure \ref{fig:williamHillOdds}, bookmakers such as William Hill
+(\url{http://sports.williamhill.com/bet/en-gb}) may offer in hundreds of betting markets (218 for this particular
+example) on an association football match.
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width = 14cm]{williamHillOdds}
+  \caption{\label{fig:williamHillOdds} A screenshot from the website of one of the top UK bookmakers William Hill,
+  showing the odds for some of the markets available on an international match between Peru and Venezuela}
+\end{center}
+\end{figure}
+
+There has also been a recent increase in what is known as `in-play' betting, where bets can be placed during a match.
+Previously, as soon as a match had started, the betting markets would suspend, however with in-play betting this is no
+longer the case. In-play betting markets see the odds change continuously throughout time in a match, and react to
+events such as goals or player dismissals.
+
+\section{Bookmaking}
+\label{sec:Bookmaking}
+
+Bookmakers typically estimate the probability of an event (for example a score of 3-0 or a home team win), and then add
+what is called `over-round' in order to ensure an expected net profit from their published odds - effectively worsening the
+fair odds. Odds may be offered in various forms (for example fractional or American) but we consider the odds in decimal
+form, which are the most natural to work with mathematically. Decimal odds are given by:
+\begin{align}
+d_{m, E} = \frac{1}{p_{m, E} + o_{m, E}}
+\end{align}
+where \(d_{m, E}\) is the bookmaker's decimal odds, \(p_{m, E}\) is the bookmaker's estimated probability, and \(o_{m,
+E}\) is the added over-round, for event \(E\) in match \(m\). From a bettor's point of view, a 1-unit bet at decimal
+odds \(d\) results in either a loss of 1 unit, or a profit of \(d-1\) units.
+
+In the past, bookmakers would devise odds based on their expert knowledge of sport and any bets they had already taken.
+For example they might begin with their best guess of the statistically profitable odds (which include over-round), then
+as bets are placed, shorten (decrease) the odds on events which have been heavily bet (discouraging future bets) and
+lengthen (increase) the odds on events which have not been bet so much (encouraging future bets). This strategy aims to
+keep a `balanced book', that is, a low-risk spread of bets taken over all events which ideally results in arbitrage for
+the bookmaker, and largely no cases where the bookmaker has a large sum to pay should a particular event occur. The
+strategy is in a sense Bayesian in flavour since the Bookmaker first assigns some prior odds based on expert knowledge,
+and then updates the odds based on new information (bets) becoming available.
+
+We note two points from the above bookmaking strategy, firstly, it is very labour intensive, requiring expert knowledge
+in both the prior setting of the odds and any movement of the odds as bets are placed. Secondly, the bookmaker moves
+odds based on his current book of bets and not necessarily on the true underlying probability of an event. Therefore,
+should a bookmaker take a lot of bets on a particular event, for example a UK bookmaker taking bets on England to win
+the association football World Cup, then the odds on that particular event may be particularly bad value and there may
+be scope for good-value, long-term profitable betting strategies focused on less fancied teams within the betting market.
+
+The first point mentioned above has been a real problem for bookmakers, and has been remedied in recent years by the use
+of statistical models which can calculate odds for hundreds of betting market events. They are most prevalent for
+in-play betting markets, since theoretically the odds should change continuously throughout time and a bookmaker who was
+manually trading may not be able to keep up with the ever changing market. Furthermore, if the bookmaker believes they
+have a good statistical model, they may choose not to change the odds based on incoming bets, instead opting for a
+high-risk, high-rate-of-return strategy.
+
+The second point mentioned above is mainly of interest to bettors, and suggests the use of statistical models to bet
+against the bookmaker, of which we present an example in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:Use_of_models_to_inform_betting_strategies}.
+
+In practice, it is likely that different bookmakers opt for different strategies with regards to the use of statistical
+models and movement of odds based on bets. However, statistical models have considerably reduced the amount of manual
+labour required for a bookmaker to offer a large number of betting markets - as we will discuss further in Section
+\ref{sec:Statistical_models_in_association_football}.
+
+% However, much of the betting markets which bookmakers now offer are only
+% possible due to the use of statistical models
+
+\section{The English Premier League}
+\label{sec:The_English_Premier_League}
+ 
+The \gls{EPL} is one of the top association football leagues and attracts interest internationally. At the end of the
+2011/2012 season over \pounds1.1bn was paid out to the 20 participating teams in broadcast money alone
+(\url{www.premierleague.com}). We thus choose this league as a test system for our subsequent statistical models.
+
+Each \gls{EPL} season involves 20 teams playing against each other twice, once at home and once away, giving a total of
+380 matches which are played over 38 weeks (10 matches per week). Teams are awarded three points for a win, one point
+for a draw, and zero points for a loss, goals scored, conceded, and difference are also recorded for calculation of the
+league standings. Teams are first ranked on points, then goal difference, and then goals scored. Ending the season in
+positions 1-4 grants qualification to what is known as the Champions League, a short tournament which contains the top
+teams in Europe, similarly, position 5 grants qualification to the Europa League. At the other end of the table, teams
+in positions 18-20 are relegated to the league below (known as the Championship), while the top 3 teams from the
+Championship are promoted into the \gls{EPL}. The league table at the end of season 2011/2012 is shown in Table
+\ref{tab:league} where `p' denotes the league position, `pld' the number of matches played, `w' the number of matches
+won, `d' the number of matches drawn, `l' the number of matches lost, `gf' the number of goals for (scored), `ga' the
+number of goals against (conceded), `gd' the goal difference (`gf' - `ga'), and `pts' the league points.
+\begin{table}
+\centering
+\fbox{
+\begin{tabular}{clcccccccc}
+p  & team                         & pld& w  & d & l  & gf & ga & gd      & pts\\
+\hline
+1 	& Manchester City   	      & 38 & 28	&5 	& 5  & 93 &	29 & \(+64\) & 89 \\ 	
+\hline
+2 	& Manchester United 	      & 38 & 28	&5 	& 5  & 89 &	33 & \(+56\) & 89 \\
+3 	& Arsenal 	                  & 38 & 21	&7 	& 10 & 74 &	49 & \(+25\) & 70 \\
+4 	& Tottenham Hotspur 	      & 38 & 20	&9 	& 9  & 66 &	41 & \(+25\) & 69 \\ 	
+\hline
+5 	& Newcastle United 	          & 38 & 19	&8 	& 11 & 56 &	51 & \(+5\)  & 65 \\ 	
+\hline
+6 	& Chelsea 	                  & 38 & 18	&10 & 10 & 65 &	46 & \(+19\) & 64 \\ 	
+7 	& Everton 	                  & 38 & 15	&11 & 12 & 50 &	40 & \(+10\) & 56 \\
+8 	& Liverpool 	              & 38 & 14	&10 & 14 & 47 &	40 & \(+7\)  & 52 \\ 	
+9 	& Fulham                      &	38 & 14	&10 & 14 & 48 &	51 & \(-3\)  & 52 \\
+10 	& West Bromwich Albion 	      & 38 & 13	&8 	& 17 & 45 &	52 & \(-7\)  & 47 \\
+11 	& Swansea City                &	38 & 12	&11 & 15 & 44 &	51 & \(-7\)  & 47 \\
+12 	& Norwich City 	              & 38 & 12	&11 & 15 & 52 &	66 & \(-14\) & 47 \\
+13 	& Sunderland 	              & 38 & 11	&12 & 15 & 45 &	46 & \(-1\)  & 45 \\
+14 	& Stoke City                  &	38 & 11	&12 & 15 & 36 &	53 & \(-17\) & 45 \\
+15 	& Wigan Athletic              &	38 & 11	&10 & 17 & 42 &	62 & \(-20\) & 43 \\
+16 	& Aston Villa 	              & 38 & 7 	&17 & 14 & 37 &	53 & \(-16\) & 38 \\
+17 	& Queens Park Rangers 	      & 38 & 10	&7 	& 21 & 43 &	66 & \(-23\) & 37 \\
+\hline
+18 	& Bolton Wanderers  	      & 38 & 10 &6 	& 22 & 46 &	77 & \(31\)  & 36 \\ 
+19 	& Blackburn Rovers  	      & 38 & 8  &7 	& 23 & 48 &	78 & \(-30\) & 31 \\
+20 	& Wolverhampton Wanderers     & 38 & 5  &10 & 23 & 40 &	82 & \(-42\) & 25 \\
+\end{tabular}}
+\caption{\label{tab:league} The league table at the end of the EPL 2011/2012 season}
+\end{table}
+At the end of the 2010/2011 season (the previous season) Norwich City, Swansea City, and Queens Park Rangers were
+promoted into the \gls{EPL}, replacing Birmingham City, Blackpool, and West Ham United.
+
+Each match in the \gls{EPL} consists of two 45-minute halves. However, at the end of each half the referee may allow
+the match to continue for longer than the allocated 45 minutes in what is known as `injury time'. Injury time typically
+adds around 2 minutes to the first half, and 3.5 minutes to the second half.
+
+As touched upon in Section \ref{sec:Gambling_in_association_football}, each week the 10 \gls{EPL} matches were
+traditionally all played at the same time of 3pm on a Saturday. This is however no longer the case, with television
+companies demanding that matches be played at different times so more can be televised. The tradition however holds on
+the last set of 10 matches in week 38, which often sees teams concurrently playing to avoid league relegation, or at the
+other end of the league table, for league victory. Furthermore, as information now flows quickly between matches, at
+all times teams are aware of the state of other concurrent games which may affect them.
+
+\section{Statistical models in association football}
+\label{sec:Statistical_models_in_association_football}
+
+Coinciding with the rise in on-line and in-play betting as been a demand for statistical models which can capture the
+details of sporting contests. As seen in Section \ref{sec:Bookmaking}, bookmakers offer hundreds of markets and thus
+require a statistical model which is capable of predicting the probability of each event in each market, both before and
+during a match. Statistical models may also be used by bettors, to inform their own betting strategy against bookmakers,
+or other bettors on an exchange like Betfair.
+
+Much of the published work on this area typically extends a model proposed by \cite{Maher1982} who suggested modelling
+the numbers of goals scored by the home and away teams goals as independent Poisson random variables, where the mean of
+each distribution depends on the strength of the home and away team's attacking and defensive capabilities.
+\cite{DixonColes1997} proposed an adjustment to the probability of certain match scores in the independent Poisson model
+and also suggested that a model's forecasting ability improved if the likelihood incorporated weightings that decreased
+exponentially with the time elapsed since the observation of an event. \cite{KarlisNtzoufras2003} built on these ideas
+with a diagonally inflated bivariate Poisson model for modelling scores. \cite{mchale2011} also presented a method of
+modelling the number of home and away team goals, by assuming the number of goals each team scored had a marginal
+negative binomial distribution, and considered the joint distribution of home and away team goals using copula methods
+(see \cite{nelsen2007}).
+
+\cite{DixonRobinson1998} introduced a richer model which modelled match goal times as opposed to only the final score.
+They demonstrated that when goal times were modelled as a non-homogeneous Poisson process, the rate of scoring of teams
+changed depending on the current score. \cite{volf2009} later presented a similar (albeit much less cited) model which
+he applied to international matches. While not applied to modelling association football goal times, \cite{baker2013}
+developed a 10-dimensional point-process model for the different methods of scoring in American football, and is also an
+excellent reference for the type of models mentioned here. 
+
+\cite{Owen2011} presented a dynamic generalized linear model which extended the model of \cite{Maher1982} to the dynamic
+spectrum where each team's attack and defense parameter followed a random walk throughout the football season.
+It was shown that, when applied to Scottish Premier League data, it was beneficial in terms of predictive performance to
+allow a dynamic model component. \cite{koopman2015} then modelled each team's attack and defense parameter as an
+auto-regressive process which fed into a bivariate Poisson model for the number of home and away team goals. They used a
+mixture of Monte Carlo and maximum likelihood methods for efficient estimation of all model parameters, and showed some
+evidence that the model produced a significant profit when compared to bookmaker's odds.
+
+All of the above mentioned models describe the strength of each team with two parameters, one which represents the
+team's attacking capability, and one which represents their defensive capability. The \gls{EPL} involves 20 teams
+competing throughout a season and thus these models use 39 parameters to describe the team strengths (one parameter must
+be constrained for model identifiability). Furthermore, ranking of the teams based on these parameters is not
+straightforward.
+
+A further class of models is only concerned with the final match outcome (home team win, draw, or away team win).
+\cite{FahrmeirTutz1994, KnorrHeld2000, CattelanVarinFirth2013} modelled this outcome using Bradley-Terry type models
+where parameters representing a team's strength could vary dynamically with time. However these models have the
+disadvantage of not being able to process all the information contained in a match's score, as for example, a score of
+5-0 is treated the same as a score of 3-2.
+
+\cite{scarf2008} also employed a Bradley-Terry type model, which they used in order to estimate an idea of `match
+importance' by considering the difference in probability of events like winning the league, when a team won or lost a
+match. These ideas fit in with the concept that teams may change their behaviour if a match is deemed important.
+Somewhat similarly, the Bradley-Terry type model of \cite{goddard2003} used covariates related to if matches had league
+promotion or relegation implications, in a thought that teams may try harder and thus have greater chance of winning in
+these matches.
+
+From the view of a bookmaker, Bradley-Terry type models are limited in that they are only able to predict probabilities
+(and thus provide odds) for the 1x2 market before a match begins. The Poisson models which extend the work of
+\cite{Maher1982} are a little more useful, in that they can predict probabilities for any correct score x-y and thus are
+able to provide odds for markets such as total goals under/over, but again, only before a match. The non-homogeneous
+Poisson process model of \cite{DixonRobinson1998} however models goal times, and thus is able to provide odds for the
+most markets both before the match and in-play. This type of model is thus the most useful to bookmakers who wish to use
+models for the purposes of making a betting market, and bettors who wish to bet both before a match and in-play on a
+variety of betting markets.
+
+It should also be mentioned that forecasting match outcomes is not the only use of statistical models in association
+football. They have become increasingly popular in advising managers on match tactics and player transfers. Data is now
+collected for each intricate movement a player makes, from missing a tackle to scoring a goal from 30 metres out, and
+teams are becoming aware of the benefits of analysis of this data. Many teams now house data analysis departments whose
+job is to value players in order to advise which player transfers represent good value, and to provide feedback on each
+individual player's performance. Statistics of this kind have been commonly used in other sports (particularly Baseball,
+which even has a book and film about this very topic, `Moneyball', \cite{moneyball}) but have only recently become
+utilised in association football. In fact, in 2012, one of the top \gls{EPL} teams, Manchester City, made player data
+publicly available in order to promote analysis of player performance.
+ 
+\section{Data}
+\label{sec:Data}
+
+We use data that record for each match the particular minute(s) during which a goal is scored and the team scoring the
+goal. Our analyses in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} and Chapter
+\ref{ch:Fast_updating_of_dynamic_and_static_parameters_using_particle_filters} concern all matches in the 2011/2012
+\gls{EPL} season, with specification of prior distributions based on the previous season (2010/2011). While analyses in
+Chapter \ref{ch:A_Utility_Based_Model} concern all matches from five seasons of \gls{EPL} data, from seasons 2007/2008
+to 2011/2012. The goal-time data are available at \url{www.scoresway.com}.
+
+As mentioned in Section \ref{sec:The_English_Premier_League} at the end of each 45 minute half, the referee allows extra
+injury time to be played. Goals scored in first half injury time are simply recorded in the data as having been scored
+at minute 45, and similarly for goals in second half injury time at minute 90. Hence, the histogram shown in Figure
+\ref{goalTimes} displays visible spikes at these times. We also note here that the vast majority of the figures in this
+thesis have been created via the use of R and ggplot2 (\cite{R, ggplot2}).
+\begin{figure}
+\begin{center}
+\includegraphics[width = 14cm]{goal-times}
+\caption{A bar plot of goal times (in minutes) for the EPL season 2011/2012}
+\label{goalTimes}
+\end{center} 
+\end{figure}
+
+We also use historical data on bookmaker's odds from the 2011/2012 \gls{EPL} season which are available as a direct
+download on the website \url{www.football-data.co.uk}. These data contain pre-match odds from the UK bookmaker Bet365
+for the 1X2 betting market. In the notation of Section \ref{sec:Bookmaking}, the data comprise \(d_{m, H}\), \(d_{m,
+D}\), and \(d_{m, A}\) for matches \(m = 1, \ldots, 380\). For any match \(m\), \(p_{m, H} + p_{m, D} + p_{m, A} = 1\),
+but calculation of \(1/d_{m, H} + 1/d_{m, D} + 1/d_{m, A}\) for a given match \(m\) typically yields a value in the
+region of 1.045 to 1.06, which highlights the use of over-round, \(o_{m, H}\), \(o_{m, D}\), and \(o_{m, A}\) in
+Bet365's published odds. Values of \(1/d_{m, H}\), \(1/d_{m, D}\), and \(1/d_{m, A}\) and their sum are displayed in
+Figure \ref{odds} via a stacked bar chart.
+\begin{figure}
+\begin{center}
+\includegraphics[width = 14cm]{odds}
+\caption{A stacked bar chart showing the value of \(1/d_{m, H} + 1/d_{m, D} + 1/d_{m, A}\) from the Bet365 1X2 betting
+market for all 380 matches (\(m\)) in the 2011/2012 season. \protect\blueBox\ \(1/d_{m, H}\), \protect\redBox\ \(1/d_{m,
+D}\), \protect\greenBox\ \(1/d_{m, A}\)}
+\label{odds}
+\end{center}
+\end{figure}
+In Chapter \ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:Use_of_models_to_inform_betting_strategies} we make the assumption that \(o_{m, H} = o_{m, D} = o_{m, A}\) in
+order to estimate the bookmaker's assumed probabilities \(p_{m, H}\), \(p_{m, D}\), and \(p_{m, A}\).
+
+\section{Aim and structure of the thesis}
+
+This thesis aims to achieve the following points in the noted chapter:
+\begin{enumerate}
+\item \textit{The creation of models which are widely applicable, have improved predictive power, and are more parsimonious than
+models currently in literature}. As mentioned throughout this introductory chapter, bookmakers need to offer hundreds of
+markets for association football matches both before the match and in-play. We thus seek to create a model which is
+applicable to a wide selection of markets, that is, a model of the goal times in a similar vein to
+\cite{DixonRobinson1998}. We consider model parsimony important, and seek to create a more parsimonious, but still rich,
+model. A model of this nature is introduced in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information}
+
+\item \textit{Inference for models in a Bayesian framework}. The use of Bayesian methods is relatively rare in the
+literature concerning association football models. We propose reasons for why the Bayesian framework is preferable for
+this particular application in Chapter \ref{ch:Bayesian_computational_methods}, and then throughout the remainder of the
+thesis, use Bayesian methods for all model inference
+
+\item \textit{Methods of inference which are quick to compute}. We also view speed of computation as important, since
+for in-play markets, updated predictions are needed continuously throughout time, in particular after goals. We thus
+explore `particle filtering' methods in Chapter
+\ref{ch:Fast_updating_of_dynamic_and_static_parameters_using_particle_filters} which also naturally present an
+opportunity to add a dynamic element to the model, in a similar vein to \cite{Owen2011}
+
+\item \textit{The creation of models which can capture behavioural aspects of teams}. Finally, we add another layer to
+the model proposed in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information}, which represents how
+teams change their behaviour in relation to their league situation. This research is able to investigate if a notion of
+`value' can be placed on the different \gls{EPL} positions, and if there is evidence that concurrent matches are not
+necessarily independent. This work is presented in Chapter \ref{ch:A_Utility_Based_Model}
+\end{enumerate}
+We also introduce the Bayesian methods used throughout the thesis in Chapter \ref{ch:Bayesian_computational_methods},
+and present a conclusion to the thesis in Chapter \ref{ch:Conclusion}.
+
+% The reasoning behind these aims, and the sections of the thesis which address them are as follows: 
+
+% The use of Bayesian methods is relatively rare in the literature concerning association football models. We propose
+% reasons of why the Bayesian framework is preferable for this particular application in Chapter
+% \ref{ch:Bayesian_computational_methods}, and then throughout the remainder of the thesis, use Bayesian methods for all
+% model inference.
+% 
+% As mentioned throughout this introductory chapter, bookmakers need to offer hundreds of markets for association football
+% matches both before the match, and in-play. We thus seek to create a model which is applicable to a wide selection of
+% markets, that is, a model of the goal times in a similar vein to \cite{DixonRobinson1998}. We consider model parsimony
+% important, and seek to create a more parsimonious, but still rich, model. A model of this nature is introduced in
+% Chapter \ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information}.
+% 
+% We also treat speed of computation importantly, since for in-play markets, updated predictions are needed continuously
+% throughout time, in particular after goals. We thus explore `particle filtering' methods in Chapter
+% \ref{ch:Fast_updating_of_dynamic_and_static_parameters_using_particle_filters} which also naturally present an
+% opportunity to add a dynamic element to the model, in a similar vein to \cite{Owen2011}.
+% 
+% Finally, we add another layer to the model proposed in Chapter
+% \ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information}, which represents how
+% teams change their behaviour in relation to their league situation. This novel research is able to investigate if a
+% value can be placed on the different \gls{EPL} positions and if there is evidence that concurrent matches are not
+% necessarily independent. This work is presented in Chapter \ref{ch:A_Utility_Based_Model}.
+% 
+% To end the thesis, a conclusion is presented in Chapter \ref{ch:Conclusion}.

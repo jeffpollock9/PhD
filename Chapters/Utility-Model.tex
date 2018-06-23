@@ -1,0 +1,849 @@
+
+\singlespacing
+
+\chapter{Incorporating league position into team behaviour}
+\label{ch:A_Utility_Based_Model}
+
+\onehalfspacing
+
+\section{Introduction}
+
+So far in the literature, all statistical models concerned with predicting the outcome of association football matches
+have made the assumption that the outcomes of distinct concurrent matches are independent. Furthermore, while Poisson
+process models have included current state of the match as predictors of the scoring rate, none have
+taken account of league situation.
+
+It is intuitive that football teams should be influenced by their league situation, most notably at the end of a season.
+Modern technology has also meant that teams are almost instantaneously aware of any changes to their league situation
+arising from events in other concurrent matches. Some notable examples of this include the occasion when Manchester City
+scored two goals in injury time to beat Queens Park Rangers 3-2 in the last game of the 2011/2012 season. When
+information that Manchester United were beating Sunderland in a concurrent game became available, Manchester City, who
+trailed 1-2, were currently 2nd in the league and needed to win their match to secure 1st place in the league. It
+appeared that while in this losing match state, Manchester City devoted a large proportion of their resource into attack
+in order to increase the chance they could win the match and thus the league.
+
+We propose an extension of our non-homogeneous Poisson process model which aims to uncover the extent to which teams
+change their behaviour depending on their current league situation and analyse the implications of these behavioural
+changes with regard to model predictions. For example, we will consider questions such as `do teams devote all of their
+resource into attack if they need a goal to prevent league relegation?' Or, `do teams devote all their resource into
+defense if they only need a draw in order to secure 1st place in the league?' Furthermore, any evidence suggesting teams
+change their behaviour based on their current league situation would also imply that matches are not necessarily
+independent, since goals in one match can affect the league situation of teams in different matches, and therefore,
+their tactics.
+
+Evidence of dependence between separate matches in association football suggests a considerable overhaul needs to be
+made in how bookmakers offer odds. With one of the most popular bets being the `1X2 accumulator' where bettors select
+one of the home win, draw, or away win events for multiple matches, it should be of utmost interest to bookmakers to
+ensure that the odds they offer for these bets are correct, that is, profitable. From a bettor's point of view, if a
+certain bookmaker offers odds based on the assumption of independence between matches, then there may exist certain
+situations where a net betting profit is expected when the independence assumption is clearly invalid.
+
+The chapter is organised as follows: Section \ref{sec:Association_football_models_using_league_information} discusses
+two models (which are not Poisson-process models) from the literature which take account of the team's league position.
+Section \ref{sec:A_model_using_utility_functions} then presents an extension of our non-homogeneous Poisson process model
+which under the assumption that teams are instantly aware of any league situation changes, allows the rates of scoring
+to depend on league considerations. Section \ref{sec:Data_utility} discusses our motivation in selecting the data used
+to infer model parameters. Section \ref{sec:Four_competing_models} considers four different models which we compare
+using \gls{DIC} (\cite{spiegelhalter2002}). Section \ref{sec:Model_inference_using_RJMCMC} presents an alternative
+approach to hand-selecting models and comparing them with \gls{DIC}, via the use of \gls{RJMCMC} (\cite{green1995}) to
+allow for Bayesian model choice. Section \ref{sec:Manchester_City_3-2_Queens_Park_Rangers} penultimately shows an
+example of how the rates of scoring implied by the non-homogeneous Poisson process model change in response to events in
+concurrent matches, and concluding remarks are presented in Section \ref{sec:Concluding_remarks_utility}.
+
+\section{Association football models using league information}
+\label{sec:Association_football_models_using_league_information}
+
+\cite{scarf2008} developed a quantitative measure of `match importance' using Bradley-Terry type models. The idea is
+that with respect to outcome \(X\), a team would deem a match important if there exists favourable and unfavourable
+results of the match, conditioned on which the difference in probability of achieving \(X\) is large. \(X\) can then be
+taken to denote favourable league outcomes, for example winning the league, qualifying for a European tournament, or not
+being relegated.
+
+The importance of match \(m\) to team \(k\) at current week of the season \(w\) with respect to outcome \(X\) is defined
+as:
+\begin{align} 
+S_k(X)_{w, m} = \Prob(X_k | F_{k, m}, \data_w) - \Prob(X_k | U_{k, m}, \data_w)
+\end{align}
+where \(X_k\) is the event that team \(k\) achieves \(X\), \(F_{k, m}\) and \(U_{k, m}\) denote a favourable and
+unfavourable outcome of match \(m\) for team \(k\) respectively, and again, \(\data_w\) denotes the data observed up to
+week \(w\). We note that team \(k\) is not necessarily one of the competing teams in match \(m\), but typically team
+\(k\) will deem that matches in which it plays the most important, in which the favourable outcome will be team \(k\)
+winning match \(m\), and the unfavourable outcome will be team \(k\) losing match \(m\). For match \(m\) in which team
+\(k\) is not competing, the draw outcome can potentially be the favourable or unfavourable outcome, for example if
+team \(k\) is top of the league with 80 points, and teams \(i\) and \(j\) who both have 78 points compete in match
+\(m\), the favourable outcome of match \(m\) for team \(k\) is a draw, for which they will retain the top league
+position (again, teams are awarded 3 points for a win, 1 for a draw, and 0 for a loss).
+
+\(S_k(X)_{w, m}\) is typically calculated by simulating the remainder of the season from current week \(w\) using a
+probabilistic model which does not depend on \(S_k(X)_{t, m}\), and fixed results of \(F_{k, m}\) and \(U_{k, m}\).
+Hence this method is able to characterise how important specific matches are for broadcasting or tournament design
+purposes, but is unfortunately not directly useful for prediction. If teams change their behaviour based on the match
+importance, then the probabilistic model (which does not depend on match importance) used to calculate match importance
+is invalid - as noted by \cite{scarf2008} with regards to using match importance measures for optimising competitor
+effort.
+
+\cite{goddard2003} were able to include the concept of match importance into a probabilistic model. They proposed adding
+covariates denoted \(SIGH_{i, j}\) and \(SIGA_{i, j}\) (which indicate if the match is deemed significant for the home
+and away teams respectively) into a Bradley-Terry type model for a match in which team \(i\) plays at home to team \(j\)
+as follows:
+\begin{align}
+SIGH_{i, j} = \left \{
+\begin{array}{ll}
+1 \quad & \text{if match has championship, promotion, or relegation}\\
+  \quad	& \text{significance for team \(i\) but not for team \(j\)}\\
+0 \quad & \text{otherwise}
+\end{array} \right.
+\end{align}
+\begin{align}
+SIGA_{i, j} = \left \{
+\begin{array}{ll}
+1 \quad & \text{if match has championship, promotion, or relegation}\\
+  \quad	& \text{significance for team \(j\) but not for team \(i\)}\\
+0 \quad & \text{otherwise.}
+\end{array} \right.
+\end{align}
+A match was deemed to be significant if it is still possible for the team in question to win the championship (league),
+be promoted, or be relegated, assuming that all other teams currently in contention for the same outcome take one point
+on average from their remaining matches. It is hoped that this covariate can indicate a difference in incentive between
+the competing teams \(i\) and \(j\), which will typically only become apparent later in the season.
+\cite{goddard2003} described the coefficients of \(SIGH_{i, j}\) and \(SIGA_{i, j}\) as significant at the 1\% and 10\%
+levels respectively based on Wald tests (see for example \cite{hosmer2013}). Data from seasons 1986/1987 to 2000/2001
+for four English leagues were used for the analysis.
+
+\section{A non-homogeneous Poisson process model using a concept of utility}
+\label{sec:A_model_using_utility_functions}
+
+We propose that a team's behaviour should be influenced by the respective values of league positions, which naturally
+suggests the use of a utility function. An example of how such a utility function might look is given in Figure
+\ref{fig:utility_league}.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{utility_league} 
+\caption{An illustration of how a utility function which values each league position might look. Knot locations are
+denoted by \protect\blackFilledCircle}
+\label{fig:utility_league}
+\end{center}
+\end{figure}
+This particular utility function is defined by eight `knots', between which the function is linear. The knots allow
+`jumps' in utility between certain league positions. For example there is a jump in utility when moving between
+positions 1 and 2 in the league, and similarly between positions 17 and 18 (position 18 is in the relegation zone). Also
+of importance is the league positions which permit entry to play in further European leagues, the Champions League for
+positions 1-4, and the Europa League for position 5 (in normal circumstances and ignoring domestic cups which may also
+grant entry to the European leagues). The governing body, UEFA, released that there was a prize fund of \euro904.6m to
+be shared amongst the 32 teams participating in the 2012/2013 Champions League (\cite{championsLeagueMoney}) and (a
+still substantial, but much less) \euro209m to be shared amongst the 56 teams participating in the 2012/2013 Europa
+League (\cite{europaLeagueMoney}). Thus, there is a clear monetary incentive for teams to reach league positions which
+provide qualification for the European leagues, in particular the Champions League.
+
+The first challenge we address is how to formulate a model specification which uses a utility function to determine how
+the teams behave, that is, how to sensibly incorporate utility values in a formula which defines the function
+\(\alpha_k(t)\). We choose to add an extra term to our existing formulation of \(\alpha_k(t)\) so the function is now a
+mixture of information from the current game situation (as with the previous formulation which considered winning,
+drawing, or losing in a match) and the current league situation:
+\begin{align} 
+\alpha_k(t, w) = \beta(w) \alpha_{l, k}(t) + (1 - \beta(w)) \alpha_{m, k}(t)
+\end{align}
+where \(0 \leq \beta(w) \leq 1\) is a mixing parameter between the allocation of resource based on the league (\(l\))
+situation, \(\alpha_{l, k}(t)\), and the resource allocation based on the match (\(m\)) situation, \(\alpha_{m, k}(t)\)
+(previously \(\alpha_k(t)\)), in week \(w\). 
+
+We expect that \(\beta(w)\) will increase from week \(w = 1\) to week \(w = 38\) as league positions become more
+important in the later stages of the season, and we aim to capture the extent of the increase by formulating:
+\begin{align} 
+\beta(w) = g(A + Bw)
+\end{align}
+where \(g\) is the logistic function:
+\begin{align} 
+g(x) = \frac{1}{1 + e^{-x}}.
+\label{eq:logistic}
+\end{align}
+Note that if the parameter \(A\) becomes large and negative and the parameter \(B\) is near 0, \(\beta(w)\) quickly
+approaches zero and the resulting model reduces to the previously proposed model in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section \ref{model}.
+Inference on the values of \(\beta(w)\) will thus demonstrate whether the data show any evidence of teams changing their
+behaviour towards the end of a season, a time in which Sir Alex Ferguson (a well known Manchester United manager)
+famously referred to as `squeaky-bum time' (\cite{squeakyBumTime}).
+
+Lastly, and somewhat most importantly, we specify:
+\begin{align}
+\alpha_{l, k}(t) = g(\sum_{p \in P} (U(p) - U(c)))
+\end{align}
+where \(P\) is the set containing the unique league positions of team \(k\) if they were to concede 2, 1, or score 1 or
+2 goals at time \(t\) (the reasoning for this choice is explained later in this section), \(c\) is their current
+position, \(U(p)\) denotes the value of the utility function at position \(p\), and again, \(g(.)\) denotes the logistic
+function as in Equation \eqref{eq:logistic}. This formulation allows the model to capture any evidence of teams changing
+their behaviour based on the league positions which are realistically attainable (1 or 2 goals away). When none of the 4
+scoring scenarios would result in a league position change, the value of \(\alpha_{l, k}(t, w)\) will be 0.5. However,
+when the scoring scenarios result in position changes, \(\alpha_{l, k}(t)\) can be greater than 0.5 (as the team plays
+offensively) or less than 0.5 (as the team plays defensively) depending on the values of utility \(U(p)\) for the
+different obtainable positions \(p\).
+
+The intuition behind this formulation of \(\alpha_{l, k}(t)\) is that if scoring a goal would result in a move up to a
+new, more desirable position \(p^{+}\), then the team may choose to play offensively in order to have an increased
+chance of scoring. We observe this offensive behaviour via an increase of goals scored but also conceded, and use it to
+suggest that the utility of position \(p^{+}\), \(U(p^{+})\), is greater than the utility of their current position
+\(U(c)\) and thus the team is playing in order to maximise their expected utility. That is, \(U(p^{+}) - U(c) > 0\)
+which suggests (ignoring other scoring scenarios) \(\alpha_{l, k}(t, w) > 0.5\), corresponding to offensive behaviour.
+
+In a similar fashion, if conceding a goal would move the team down to position \(p^{-}\), then the team may choose to
+play defensively in order to decrease the chance of conceding. We observe this defensive behaviour and use it to suggest
+that \(U(p^{-}) - U(c) < 0\) which suggests \(\alpha_{l, k}(t, w) < 0.5\), corresponding to defensive behaviour.
+
+One assumption in this model is that teams play according to their league position if they were to concede 2, 1, or
+score 1 or 2 goals. We made this assumption with the thought that scoring 1 or 2 goals in a short time frame is quite
+reasonable in the \gls{EPL} whereas 3 is quite rare. For example, suppose team \(k\) is losing 3-0 which results in 0
+league points while a 3-3 draw would result in 1 point and would boost their league position by a single place. Should
+team \(k\) devote more of their resource to attack (play more offensively)? They are almost surely going to lose and we
+feel that league considerations will be quite irrelevant for the team at that point. Should team \(k\) however score, so
+the match score is 3-1, they may then start playing offensively as they have a chance to score 2 more goals and achieve
+a 3-3 draw which would result in them moving up a place in the league.
+
+We follow the model specification presented in Chapter
+\ref{ch:Fast_updating_of_dynamic_and_static_parameters_using_particle_filters} Section \ref{sec:An_updated_model} in
+that we consider the model specification:
+\begin{align}
+  \log(\lambda_{i}(t, w)) = h + \alpha_i(t, w) e^{LR_i} - (1 - \alpha_j(t, w)) e^{LR_j} + \rho(t)\\
+  \log(\mu_{j}(t, w)) = a + \alpha_j(t, w) e^{LR_j} - (1 - \alpha_i(t, w)) e^{LR_i} + \rho(t).
+\end{align} 
+The model is however not dynamic in that the team resources are considered fixed throughout a season (it is just our
+estimate of the team resource parameters which changes). Nevertheless we still consider the log-resource which makes
+computation slightly easier (there is no restriction on the value of \(LR_k\) for all teams \(k\)).
+
+\section{Data}
+\label{sec:Data_utility}
+
+As indicated previously, we suspect that the effects of utility decisions will only become apparent at the end of a
+season, where teams will be fighting last minute to avoid relegation or for one of the top league positions. This not
+only suggests that the mixing parameter \(\beta(w)\) be a function of the week of the season \(w\), but also that only a
+small portion of each season's data may display the effects we are looking for - making inference difficult. With this
+in mind we chose to use five seasons of data, from 2007/2008 to 2011/2012. The data contain the day of each match, but
+unfortunately not the time, so we make the assumption that matches are played at the same time every day since the model
+must be aware of the current league standings at all times. These five seasons of data include 29 teams (teams are
+relegated and promoted each season) and thus we now consider the team log-resource parameters \(\mathbf{LR} = (LR_1,
+\ldots, LR_{29})\) which are assumed to be constant from season to season.
+
+\section{Four competing models}
+\label{sec:Four_competing_models}
+
+We now consider the problems of model inference and also model choice as we attempt to determine the number and location
+of knots in the utility function. In this section we consider four competing models, each defined by a different choice
+of positions for the knots. The models are hand-selected based on our prior belief of what the league utility function
+might look like and have varying complexity. For example we believe there should be a jump in utility between positions
+17 and 18 (again, position 18 is the highest relegation position) which implies we place knots at these positions. We
+then use \gls{DIC} as a model selection criterion to choose between the four hand-selected models.
+
+We begin by considering the model which places knots at the same positions as in Figure \ref{fig:utility_league}, that
+is, positions \((1, 2, 4, 5, 6, 17, 18, 20)\). We consider this as our most complex model, \(m_3\), and in addition
+consider three less complex models which have knots in positions shown in Table \ref{tab:knot_locations}. For all
+models, the utility function is linear between knot positions, as was in Figure \ref{fig:utility_league}.
+\begin{table}
+\centering
+\fbox{
+\begin{tabular}{ccl}
+model   & \vline & knot positions \\
+\hline
+\(m_0\) & \vline & (1, 17, 18, 20) \\
+\(m_1\) & \vline & (1, 5, 17, 18, 20) \\
+\(m_2\) & \vline & (1, 2, 5, 17, 18, 20) \\
+\(m_3\) & \vline & (1, 2, 4, 5, 6, 17, 18, 20)
+\end{tabular}}
+\caption{\label{tab:knot_locations} A summary of the different knot positions in each of the four models}
+\end{table}
+The knot positions for each model are fixed, but the corresponding utility value at each knot is a model parameter,
+which we denote \(\mathbf{U}_{m_i}\) for model \(m_i\). However, for all models the value of utility at position 20 is
+constrained, \(U(20) = 0\), to ensure model identifiability. For example, for model \(m_0\) the parameter space is
+\((\boldTheta, \mathbf{U}_{m_0})\) where \(\mathbf{U}_{m_0} = (U_1, U_{17}, U_{18})\) (the utility values at
+positions 1, 17, and 18 respectively) and \(\boldTheta = (h, a, \ldots)\) contains the remaining model
+parameters, common to all models.
+
+\subsection{Prior choice}
+\label{sec:Prior_choice1}
+
+The parameters in \(\boldTheta\) are assigned the following prior distributions which follow from prior distributions
+used for model inference in Chapters
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} and
+\ref{ch:Fast_updating_of_dynamic_and_static_parameters_using_particle_filters} where possible:
+\begin{equation}
+\begin{aligned}[c]
+h &\sim N(0.4, 0.5^2) \\
+a &\sim N(0.08, 0.5^2) \\
+\rho_1 &\sim N(1, 0.5^2) \\
+\rho_2 &\sim N(1.5, 0.5^2) \\
+c_i &\sim B(1.5, 1.5) \text{ for } i \in \{-1, 0, 1\}
+\end{aligned}
+\qquad\qquad
+\begin{aligned}[c]
+d_i &\sim B(3, 1) \text{ for } i \in \{-1, 0, 1\} \\
+LR_k &\sim N(-0.7, 1^2) \text{ for } k \in \{1, \ldots, 29\} \\
+A &\sim N(0, 2^2) \\
+B &\sim Exp(0.5).
+\end{aligned}
+\end{equation}
+We have little information on plausible values of \(A\), and thus use the relatively non-informative prior \(N(0, 2^2)\)
+which should still allow for \(A\) to become large and negative, allowing the model to reduce effectively to that of
+Chapter \ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} if the data
+suggest such a value. \(B\) however suggests a change throughout the season in how important utility decisions are, and
+so we constrain it to be positive (utility decisions become more important towards the end of the season).
+
+For the utility value at position \(p\), we choose the prior \(U_p \sim \Gamma(2.5, 2.5 / U^0_p)\) so the priors at each
+position share a common shape parameter and have differing means, \(U^0_p\). The mean at each position is shown in Table
+\ref{tab:utility_prior}.
+\begin{table}
+\centering
+\fbox{
+\begin{tabular}{*{9}{c}}
+\(p\)     & \vline & 1  & 2 & 4   & 5 & 6   & 17 & 18 \\
+\hline                                
+\(U^0_p\) & \vline & 10 & 8 & 7.5 & 7 & 6.5 & 4  & 1  \\
+\end{tabular}}
+\caption{\label{tab:utility_prior} The means of the \(\Gamma\) prior density for the utility value at the knot
+positions \(p\) used within models \(m_0\), \(m_1\), \(m_2\), and \(m_3\)}
+\end{table}
+We also display a density plot of the utility value prior distributions in Figure \ref{fig:utility_prior}. Of course,
+the simpler models do not make use of the prior distributions at positions where they do not contain knots. 
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{utility_prior}
+\caption{\label{fig:utility_prior} A plot of the prior density of the utility value for the possible knot locations.
+\protect\redSolidLine\ position 1, \protect\greenSolidLine\ position 2, \protect\blueSolidLine\ position 4,
+\protect\pinkSolidLine\ position 5, \protect\blackSolidLine\ position 6, \protect\greySolidLine\ position 17,
+\protect\orangeSolidLine\ position 18} 
+\end{center}
+\end{figure}
+
+The variance of the utility value is notably larger for the higher positions when compared to position 18. The model is
+constrained so that the utility of position 20 is zero (\(U(20) = 0\)) and so we can be fairly sure that neighbouring
+positions (for example position 18 which is also a relegation position) have a utility fairly near 0. As we move further
+away from position 20 however, it is harder to reasonably estimate values of the utility function, and hence, we allow
+the variance of the utility values to increase with the mean.
+
+\subsection{Results of model fitting}
+\label{sec:Model_inference_results1}
+
+For each model \(m_i\) we take 40,000 posterior samples from the joint posterior distribution of \((\boldTheta,
+\mathbf{U}_{m_i})\) using a random-walk \gls{MH} algorithm. An optimisation routine for the log-likelihood was performed
+in order to find the \gls{MLE} \((\boldsymbol{\hat{\theta}}, \mathbf{\hat{U}}_{m_i})\) which was used as a starting
+value. For a similar model, we have already considered the posterior distribution of the parameters \(\boldTheta\) in
+Chapter \ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:Bayesian_inference_for_parameter_estimation}. Here we only report the posterior distributions of the new
+parameters related to the utility function. We do however note that our posterior estimate of \(\boldTheta\) will in
+general now be slightly different to that reported in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:Bayesian_inference_for_parameter_estimation}, due to the different model and data employed. Figures
+\ref{fig:utility_0}, \ref{fig:utility_1}, \ref{fig:utility_2}, and \ref{fig:utility_3} display plots of posterior
+samples from the functions \(U(p)\) and \(\beta(w)\) for each of the four models. The plots display a random sample of
+size 1,500 from the 40,000 posterior samples taken to prevent plot rendering problems.
+\begin{figure}[htp]
+\begin{center} 
+  \includegraphics[width = 14cm]{utility_0}
+  \caption{\label{fig:utility_0} A plot of 1,500 samples from the posterior distribution of the utility function
+  \(U(p)\) (top) and the function \(\beta(w)\) (bottom) for model \(m_0\). \protect\redSolidLine\ the posterior mean}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width = 14cm]{utility_1}
+  \caption{\label{fig:utility_1} A plot of 1,500 samples from the posterior distribution of the utility function
+  \(U(p)\) (top) and the function \(\beta(w)\) (bottom) for model \(m_1\). \protect\redSolidLine\ the posterior mean}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width = 14cm]{utility_2}
+  \caption{\label{fig:utility_2} A plot of 1,500 samples from the posterior distribution of the utility function
+  \(U(p)\) (top) and the function \(\beta(w)\) (bottom) for model \(m_2\). \protect\redSolidLine\ the posterior mean}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width = 14cm]{utility_3}
+  \caption{\label{fig:utility_3} A plot of 1,500 samples from the posterior distribution of the utility function
+  \(U(p)\) (top) and the function \(\beta(w)\) (bottom) for model \(m_3\). \protect\redSolidLine\ the posterior mean}
+\end{center}
+\end{figure}
+
+The plots showing posterior samples of the function \(\beta(w)\) are all quite similar for each of the four models, and
+show that in the first match of the season the function is in the region of 0.05, increasing to values in the region of
+0.4 in the last match of the season.
+
+The plots showing posterior samples of the utility function \(U(p)\) are largely as we would expect. There is a clear
+difference between the utility value of relegation positions (18, 19, and 20) and the first non-relegation position
+(17). The value of utility then in general increases upwards towards the league winner (position 1). However, there is
+one very noticeable, and unexpected result shown in the inference of model \(m_3\). The plot suggests that \(U(6) >
+U(5)\), that is, the value of position six is greater than the value of position five, as shown by the behaviour of
+teams. In fact, the posterior probability \(\Prob(U(6) > U(5)) = 0.9804\).
+
+We mentioned in Section \ref{sec:A_model_using_utility_functions} that position 5 granted qualification to the Europa
+League, and thought this would provide incentive for teams to reach this position. We naturally then placed a prior
+distribution on the utility function values which suggested that \(U(5) > U(6)\). The posterior distribution however
+contradicts our prior belief, and suggests that teams will play offensively in order to get out of position 5, and play
+defensively to defend position 6 instead of moving up to position 5. This contradiction between the prior and posterior
+distributions suggests that the data may contain strong evidence of an unexpected effect in team behaviour related to
+position 5, which we discuss in further detail.
+
+In 2015 several on-line articles appeared suggesting that \gls{EPL} teams may prefer not to play in the Europa League,
+for example the aptly named `The Race to Avoid Europa League Qualification Starts Now' (\cite{raceToAvoidEurope}), `The
+battle to avoid the Europa League' (\cite{battleToAvoidEurople}), and `Tottenham's Mauricio Pochettino: avoiding Europa
+League could help us' (\cite{spursAvoidEurople}). The articles all imply that the extra travelling around Europe and
+matches (up to 23) is a potential burden on teams. An \gls{EPL} team typically plays a Europa League match on a
+Thursday, and then a \gls{EPL} match on a Sunday, and it is widely thought that players struggle to recover physically
+and/or mentally between the frequent matches. Thus playing in the Europa League may have a negative affect on a teams
+performance in the \gls{EPL} and furthermore, as mentioned in Section \ref{sec:A_model_using_utility_functions}, the
+monetary rewards of the Europa League are not huge (in European association football terms).
+
+On reflection it does seem plausible that teams behave in order to avoid qualification for the Europa League - and our
+model inference is consistent with this thought. We do however realise that there could be other explanations for
+observing the locally low value of \(U(5)\) in Figure \ref{fig:utility_3}. One thought is that a particular team may
+have been in position 5 for a large amount of time throughout the data, and it may be that this team had a particularly
+offensive style of play. Thus, the team may not have been devoting a larger proportion of resource into attack in order
+to move out of position 5 (to 4 or 6), they are behaving this way simply because it is their style of play. The same
+thoughts apply to a particularly defensive team which may have spent a large amount of time in position 6.
+
+% This is not however shown in the data, which in fact show that teams typically play offensively in order to get out of
+% this position, and may even defend a position of sixth place. The strength of this evidence in the data has even
+% overcome our prior distributions, which suggested that the utility of position five was greater than that of position
+% six. On second thought it does seem reasonable that teams would play in order to avoid qualification to the Europa
+% league, it is not a prestigious league, (unlike the Champions League or the \gls{EPL}) and thus does not offer
+% substantial monetary rewards. Furthermore, players will tire from the matches and associated travelling for matches in
+% this league, when they would be better suited to concentrating 100\% on the more important matches in the \gls{EPL}.
+
+\subsection{Model choice using DIC}
+\label{sec:Model_choice_using_DIC}
+
+\gls{DIC} values calculated from 40,000 posterior samples are shown in Table \ref{tab:DIC}. The differences in values
+of \gls{DIC} are not dramatic between the models, but do suggest that model \(m_3\) is preferred.
+\begin{table}
+\centering
+\fbox{
+\begin{tabular}{cccc}
+model   & \vline & \(p_D\) & DIC \\
+\hline
+\(m_0\) & \vline & 35.7211 & 5650.54 \\
+\(m_1\) & \vline & 36.7981 & 5647.54 \\
+\(m_2\) & \vline & 36.4681 & 5647.96 \\
+\(m_3\) & \vline & 37.3923 & 5642.70
+\end{tabular}}
+\caption{\label{tab:DIC} \(p_D\) and DIC for the four competing models}
+\end{table}
+
+We also note the rather counter-intuitive finding of the effective number of parameters \(p_D\) being greater for model
+\(m_1\) when compared to model \(m_2\). We might not expect this since \(dim(\mathbf{U}_{m_2}) >
+dim(\mathbf{U}_{m_1})\), but as can be seen in Figure \ref{fig:utility_1} and Figure \ref{fig:utility_2}, it appears
+that the extra parameter in the utility function for model \(m_2\) actually serves to decrease the variance in the
+utility function (note the differing y-axis scales on each figure).
+
+Taking the approach of comparing models on \gls{DIC}, one might stop here and base all analysis on the `best' model,
+model \(m_3\), which as mentioned in Section \ref{sec:Model_inference_results1}, displayed unexpected evidence of teams
+playing in order to not be in position 5 (Europa League qualification position). We however present an alternative
+approach to choosing a single model and basing all analysis upon it in the following section using the method of
+Bayesian model averaging first presented in Chapter \ref{ch:Bayesian_computational_methods} Section
+\ref{sec:Bayesian_model_averaging}.
+
+\section{Model inference using RJMCMC}
+\label{sec:Model_inference_using_RJMCMC}
+
+In Section \ref{sec:Four_competing_models} we considered four models, each defined by a different set of knot positions.
+There are however a total of \(2^{18} = 262,144\) possible models, which each either does or does not contain a knot at
+any of the 18 available positions, \(2, 3, \ldots, 19\). We design a sampling procedure using \gls{RJMCMC} (reviewed in
+Chapter \ref{ch:Bayesian_computational_methods} Section \ref{sec:RJMCMC_overview}) which explores the posterior
+distribution on a space of models and the corresponding model parameters at the same time. Thus using a data-driven
+approach to decide what knot positions should be considered.
+
+This approach allows us to use Bayesian model averaging in order to infer the utility function \(U(p)\) by averaging
+over the space of possible models (possible knot locations). We shall then see how close the utility function obtained
+from Bayesian model averaging is to the utility function from simply using model \(m_3\). For example, is it possible
+that we did not even consider a model defined by a choice of knot locations that would better fit our test data?
+ 
+The parameter space of interest is \((\boldKappa, \boldsymbol{U_\kappa}, \boldTheta)\) where \(\boldKappa\) is the
+league positions of the knots, \(\boldsymbol{U_\kappa}\) are their corresponding utility values, and \(\boldTheta = (h,
+a, \ldots)\) as previously contains the remaining model parameters. Furthermore, we denote \(U_m(p)\) to be the value of
+utility under model \(m\) at position \(p\), and denote the number of knots as \(K = dim(\boldKappa)\). We follow a
+similar method to that of \cite{punska1999}, in that for each iteration of the \gls{RJMCMC} we propose either a birth of
+a knot, the death of a knot, or the movement of an existing knot, followed by random-walk \gls{MH} updating of the
+parameters \(\boldTheta\) which are not related to the utility function. As in Section \ref{sec:Four_competing_models},
+we fix the knot at position 20 with \(U(20) = 0\) and constrain that there is always a knot at position 1 to ensure
+model identifiability. The allowable values of \(K\) are thus the integers from 2 to 20. An outline of a single
+iteration of the algorithm after initialisation of the parameters is as follows:
+\begin{enumerate}
+  \item Sample \(s \sim U(0, 1)\)
+  \item If \(s < p_{birth}(K)\) then propose the birth of a new knot
+  \item Else if \(s < p_{birth}(K) + p_{death}(K)\) then propose the death of an existing knot
+  \item Else propose a movement to one of the existing knot utility values, \(\boldsymbol{U_\kappa}\)
+  \item Update \(\boldTheta\) using random-walk \gls{MH}
+\end{enumerate}
+where:
+\begin{align}
+p_{birth}(K) = \left \{
+\begin{array}{ll}
+1/2 \quad &\text{if \(K = 2\)}\\
+0 \quad &\text{if \(K = 20\)}\\
+1/3 \quad &\text{otherwise}
+\end{array} \right.
+\end{align}
+%
+\begin{align}
+p_{death}(K) = \left \{
+\begin{array}{ll}
+0 \quad &\text{if \(K = 2\)}\\
+1/2 \quad &\text{if \(K = 20\)}\\
+1/3 \quad &\text{otherwise}
+\end{array} \right.
+\end{align}
+so the functions \(p_{birth}(K)\) and \(p_{death}(K)\) give the probability of a proposal of a  birth or death
+respectively depending on the current number of knots, (minimum 2 and maximum 20). Parameters \(\boldTheta\) are updated
+using random-walk \gls{MH} methods, the birth and death proposals are however slightly more non-standard and are thus
+explained in Sections \ref{sec:Knot_birth} and \ref{sec:Knot_death}.
+ 
+\subsection{Knot birth}
+\label{sec:Knot_birth}
+
+If the current state of the chain is \((\boldKappa, \boldsymbol{U_\kappa}, \boldTheta)\) for which we denote
+corresponding model \(m\), the methodology for the proposal for the birth of a new knot is as follows:
+\begin{enumerate}
+  \item Propose model \(m'\) which places a knot in one of the \(20 - K\) currently available positions with equal
+  probability, denote this position \(p'\) and thus \(\boldKappa' = (p', \boldKappa)\)
+  \item Sample \(u' \sim N(U_m(p'), \sigma^2_\kappa)\), our proposal for the
+  utility value at the new position \(p'\), and set \(\boldsymbol{U_{\kappa}'} = (u', \boldsymbol{U_\kappa})\)
+  \item Accept model \(m'\) with probability \(\alpha_{birth}\)
+\end{enumerate}
+where:
+\begin{align} 
+\alpha_{birth} = \min\left(1, 
+\frac{p(\data | \boldKappa', \boldU_{\boldKappa}', \boldTheta)}{p(\data | \boldKappa, \boldU_{\boldKappa}, \boldTheta)}
+\times \frac{p(\boldKappa', \boldU_{\boldKappa}')}{p(\boldKappa, \boldU_{\boldKappa})} \times
+\frac{p_{death}(K')}{p_{birth}(K)} \times 
+\frac{\frac{1}{K' - 2}}{\frac{1}{20 - K}} \times 
+\frac{1}{p(u')}
+\right).
+\label{eq:birth}
+\end{align}
+In this case the proposal state is \((\boldKappa', \boldU_{\boldKappa}', \boldTheta, \boldsymbol{\mu}')\)
+with \(dim(\boldsymbol{\mu}') = 0\). The additional parameters \(\boldsymbol{\mu} = (p', u')\) (which are included in
+the vectors \(\boldKappa'\) and \(\boldU_\kappa'\)) are drawn directly from probability distributions and all
+remaining parameters are the same from models \(m\) to \(m'\). We may write the parameter transformation function as:
+\begin{align} 
+g_{m, m'}(\boldKappa, \boldU_{\boldKappa}, \boldTheta, \boldsymbol{\mu}) 
+= (\boldKappa, \boldU_{\boldKappa}, \boldTheta, p', u', \boldsymbol{\mu}')
+\end{align}
+that is, it does not actually perform any transformations. It is fairly straightforward to see that:
+\begin{align} 
+\left| \frac{\partial g_{m, m'}(\boldKappa, \boldU_{\boldKappa}, \boldTheta, \boldsymbol{\mu})}
+{\partial (\boldKappa, \boldU_{\boldKappa}, \boldTheta, \boldsymbol{\mu})} \right| = 
+\left| \frac{\partial (\boldKappa, \boldU_{\boldKappa}, \boldTheta, p', u', \boldsymbol{\mu}')}
+{\partial (\boldKappa, \boldU_{\boldKappa}, \boldTheta, \boldsymbol{\mu})} \right| = 1.
+\end{align}
+As was noted in \cite{punska1999}, if the proposal (in this example \(\boldMu\)) is made directly in the new parameter
+space (as opposed to using dimension matching random variables) the Jacobian term is equal to 1.
+
+Figure \ref{fig:knotBirthExample} shows a graphical illustration of the knot birth process. Firstly, a birth of a knot
+in position \(p' = 10\) is chosen uniformly from the available positions \(2, 3, \ldots, 19\). The utility value at the
+new knot position is then sampled from the proposal density \(N(U_m(p'), \sigma^2_\kappa)\). Model \(m'\) containing the
+new knot is then accepted with probability \(\alpha_{birth}\).
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width = 14cm]{knotBirthExample}
+  \caption{\label{fig:knotBirthExample} The utility function given by model \(m\) (top), the proposal of a new knot in
+  position 10 (middle), the resulting utility function of model \(m'\) (bottom). \protect\blackFilledCircle\ utility
+  function knot locations, \protect\blackDashedLine\ the superimposed proposal density}
+\end{center}
+\end{figure}
+
+\subsection{Knot death}
+\label{sec:Knot_death}
+
+We follow from the knot birth and explain how to reverse the birth move. At current state \((\boldKappa',
+\boldU_{\boldKappa}', \boldTheta')\) for which we denote corresponding model \(m'\) and using the notation
+\(\boldsymbol{A}_{-a}\) to denote the vector \(\boldsymbol{A}\) with value \(a\) removed, the methodology for the
+proposal for the death of an existing knot is as follows:
+\begin{enumerate}
+  \item Propose model \(m\) which removes one of the \(K' - 2\) current knot positions with equal
+  probability, denote the removed position \(p'\) with corresponding utility value \(u'\). Thus the
+  proposal parameters are \(\boldKappa = \boldKappa'_{-p'}\) and \(\boldU_{\boldKappa} =
+  \boldU_{\boldKappa,-u'}'\)
+  \item Accept model \(m\) with probability \(\alpha_{death}\)
+\end{enumerate}
+where:
+\begin{align} 
+\alpha_{death} = \min\left(1, 
+\frac{p(\data | \boldKappa, \boldU_{\boldKappa}, \boldTheta)}
+{p(\data | \boldKappa', \boldU_{\boldKappa}', \boldTheta)} 
+\times 
+\frac{p(\boldKappa, \boldU_{\boldKappa})}
+{p(\boldKappa', \boldU_{\boldKappa}')} 
+\times
+\frac{p_{birth}(K)}{p_{death}(K')} \times
+\frac{\frac{1}{20 - K}}{\frac{1}{K' - 2}} \times
+\frac{p(u')}{1}
+\right).
+\label{eq:death}
+\end{align}
+In this case the proposal parameters are \((\boldKappa, \boldU_{\boldKappa}, \boldTheta, \boldsymbol{\mu})\) with
+\(\boldsymbol{\mu} = (p', u')\) containing the removed parameters and \(dim(\boldsymbol{\mu}') = 0\). The parameter
+transformation function is the inverse of that seen for the birth:
+\begin{align} 
+g_{m', m}(\boldKappa, \boldU_{\boldKappa}, \boldTheta, p', u', \boldsymbol{\mu}') =
+(\boldKappa, \boldU_{\boldKappa}, \boldTheta, \boldsymbol{\mu})
+\end{align}
+and again, does not perform any transformations so the Jacobian term is equal to 1. Also it can be seen that
+\(\alpha_{birth}\) and \(\alpha_{death}\) are reciprocals, as is needed in order for the Markov Chain to satisfy
+detailed balance (\cite{hastie2012}).
+
+Figure \ref{fig:knotDeathExample} shows a graphical illustration of the knot death process. Firstly, the death of the
+knot in position \(p' = 3\) is chosen uniformly from the available knot positions \(3, 5, 10\). Model \(m\) containing
+one fewer knot is then accepted with probability \(\alpha_{death}\).
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width = 14cm]{knotDeathExample}
+  \caption{\label{fig:knotDeathExample} The utility function given by model \(m'\) (top), the proposal of the death of
+  the knot in position 3 (middle), the resulting utility function of model \(m\) (bottom). \protect\blackFilledCircle\
+  utility function knot locations}
+\end{center}
+\end{figure}
+
+\subsection{Prior choice}
+\label{sec:Prior_choice2}
+
+The prior distributions used for \(\boldTheta\) follows from Section \ref{sec:Prior_choice1}, we now however place a
+prior on the number of knots \(K\), the knot values \(\boldU_{\boldKappa}\), and the knot positions \(\boldKappa\).
+
+The position of two knots in \(\boldKappa\) are fixed at 1 and 20. There is then a uniform prior on the position of the
+potential remaining knots in positions 2 to 19. We extend Table \ref{tab:utility_prior} with similar reasoning as
+previously discussed to show the \(\Gamma\) density prior means at all the possible knot positions, which can be seen in
+Table \ref{tab:utility_prior_RJ}, again, \(U_p \sim \Gamma(2.5, 2.5 / U^0_p)\). Finally, we place a prior on the number
+of knots, \(K\):
+\begin{align} 
+\Prob(K) = \left \{
+\begin{array}{ll}
+\frac{f(K)}{1 - F(1)} \quad & \text{if } 2 \leq K \leq 20\\
+0		                    & \text{otherwise}
+\end{array} \right.
+\end{align}
+where \(f(K)\) is the discrete binomial probability mass function at point \(K\) with parameters \(n\) and \(\alpha\),
+and \(F(1)\) is the corresponding cumulative distribution function at point 1. \(\Prob(K)\) is then a conditional
+binomial distribution, the condition being \(K > 1\). \(n = 20\), and we choose \(\alpha = 0.05\) which means the prior
+favours models with a smaller number of knots (this prior distribution can be seen in Figure
+\ref{fig:number_of_knots_RJ}). We thus argue that a high posterior probability of the presence of a knot is due to
+significant evidence in the data.
+\begin{table}
+\centering
+\fbox{
+\begin{tabular}{*{12}{c}}
+\(p\)     & \vline & 1    & 2    & 3    & 4    & 5    & 6    & 7    & 8    & 9    & 10   \\
+\hline
+\(U^0_p\) & \vline & 10   & 8    & 7.75 & 7.5  & 7    & 6.5  & 6.27 & 6.05 & 5.82 & 5.59 \\
+\\
+\(p\)     & \vline & 11   & 12   & 13   & 14   & 15   & 16   & 17   & 18   & 19   &      \\
+\hline
+\(U^0_p\) & \vline & 5.36 & 5.14 & 4.91 & 4.68 & 4.45 & 4.23 & 4    & 1    & 0.5  &      \\
+\end{tabular}}
+\caption{\label{tab:utility_prior_RJ} The means of the \(\Gamma\) prior density for the utility value at each
+possible knot position}
+\end{table}
+
+The prior (as seen in Equations \ref{eq:birth} and \ref{eq:death}) for the vector of knot positions and corresponding
+knot values is thus:
+\begin{align} 
+p(\boldKappa, \boldU_{\boldKappa}) \propto \Prob(K) \prod_{i = 1}^K p(U_{\kappa_i})
+\end{align}
+where again, \(K = \dim(\boldKappa)\) (the number of knots), and \(p(U_{\kappa_i})\) is the value of the \(\Gamma(2.5,
+2.5 / U^0_{\kappa_i})\) density at point \(U_{\kappa_i}\) with \(\boldU_{\boldKappa} = (U_{\kappa_1}, \ldots,
+U_{\kappa_K})\).
+
+\subsection{Model inference results}
+\label{Model_inference_results2}
+
+We opt to take a large amount of samples from the \gls{RJMCMC} process since the posterior space we wish to explore is
+very high in dimension. We initialise the chain with a sample from the last iteration of the \gls{MCMC} procedure for
+model \(m_3\) from Section \ref{sec:Four_competing_models} and take 100,000 posterior samples. Figure
+\ref{fig:utility_RJ} displays plots of posterior samples from the functions \(U(p)\) and \(\beta(w)\) - which are
+Bayesian model averaging estimates. Again, the plots only display a random sample of size 1,500 of the 100,000 to
+prevent plot rendering problems. Figure \ref{fig:number_of_knots_RJ} displays plots showing the prior and posterior
+distribution of the number of knots, \(K\), and the posterior distribution of the knot positions, \(\boldKappa\).
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width = 14cm]{utility_RJ}
+  \caption{\label{fig:utility_RJ} A plot of 1,500 samples from the posterior distribution of the utility function
+  \(U(p)\) (top) and the function \(\beta(w)\) (bottom) using RJMCMC. \protect\redSolidLine\ the posterior mean}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width = 14cm]{number_of_knots_RJ}
+  \caption{\label{fig:number_of_knots_RJ} A bar plot of the prior and posterior probabilities for the total number of
+  knots (top). A bar plot of the posterior probability of a knot in each position (bottom). \protect\redBox\ the prior
+  probabilities, \protect\blueBox\ the posterior probabilities}
+\end{center}
+\end{figure}
+
+The most prominent knot positions are 4 and 5, which as can be seen in Figure \ref{fig:number_of_knots_RJ} have the
+highest posterior probabilities of the non-fixed knot positions. Also, the posterior probability \(\Prob(U(6) > U(5)) =
+0.81887\), again showing an unexpected decrease in utility going from position 6 to position 5, which we attribute to
+the same reasons as discussed in Section \ref{sec:Model_inference_results1}. The difference here is that we imposed no
+knowledge of a knot in any of the positions, the knot position was chosen purely by the data. Thus, in some ways this
+suggests even stronger evidence of teams adapting their behaviour based on their league situation, in order to avoid
+position 5 which grants entry to the Europa League.
+
+Figure \ref{fig:utility_RJ} also shows an, at first, counter-intuitive finding of a locally high utility value around
+the mid-table positions (position 10). We expect that this is due to the fact that when utility decisions become
+important (later in the season due to \(\beta(w)\)) it is highly likely that teams are only able to move a few positions
+at any one time. For example it would certainly be very unlikely that a team would be able to move from position 10 to
+position 1 by winning a single match. And so we must be careful how we interpret the utility function, as the utility
+values are only comparable locally. It does then seem that the mid-table position may be rather comfortable for some
+teams, which makes sense in that these teams are safe from the pitfall of relegation.
+
+In comparison to the inferred utility function of model \(m_3\), the utility function here is very similar in most
+positions apart from the relegation positions. The \gls{RJMCMC} procedure did not produce a high posterior probability
+of a knot at positions 17 and 18 which would be required to separate the utility values of the relegation positions to
+the non-relegation positions, and thus the utility function shown in Figure \ref{fig:utility_RJ} is reasonably linear
+around the relegation positions. This does suggest that teams play offensively in order to escape relegation, but not as
+obviously or dramatically as the utility function of model \(m_3\) (Figure \ref{fig:utility_3}) would suggest. One
+possible explanation for this is that the teams which are typically in the relegation zone at the end of the season are
+of lesser ability and thus low resource, effectively meaning that changing their behaviour has little effect on the rates
+of scoring - making the effects harder to uncover.
+
+It should be noted however that posterior model probabilities (which we have implicitly used for the Bayesian model
+averaging estimate of the utility function \(U(p)\)) are susceptible to the Jeffreys-Lindley paradox as discussed in
+Chapter \ref{ch:Bayesian_computational_methods} Section \ref{sec:Jeffreys_Lindley_paradox}, whereas methods like model
+choice based on \gls{DIC} are not. Thus, we might expect the Bayesian model averaging estimate of the utility function
+to be less complex than one determined by comparison of models based on \gls{DIC}. We do however restrict our
+susceptibility to the Jeffreys-Lindley paradox via the use of relatively informative prior distributions.
+
+\section{An exemplar match}
+\label{sec:Manchester_City_3-2_Queens_Park_Rangers}
+
+In a similar fashion to as shown in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:Bayesian_inference_for_parameter_estimation}, we show the rates of scoring and the resource allocation for the
+competing teams throughout an \gls{EPL} match in Figure \ref{fig:inplay2}. Again, the rates of scoring and the resource
+allocations are based on posterior mean estimates.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{inplay2}
+\caption{A plot of the rates of scoring (\(\lambda_m(t)\) and \(\mu_m(t)\)) (top) and the resource allocation
+\(\alpha_k(t, w)\) (bottom) for match \(m\) where Manchester City played at home to Queens Park Rangers.
+\protect\redSolidLine\ denotes Manchester City, \protect\blueDashedLine\ denotes Queens Park Rangers,
+\protect\graySolidLine\ goals scored in this match, \protect\grayDashedLine\ goals scored in other concurrent matches}
+\label{fig:inplay2}
+\end{center} 
+\end{figure} 
+The match saw Manchester City play at home to Queens Park Rangers in the last match of the season on 13th May 2012. What
+was particularly interesting about this match, and was not mentioned in any detail in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:Bayesian_inference_for_parameter_estimation}, was that this match saw Manchester City fluctuate between league
+positions 1 and 2, and at the other end of the league, Queens Park Rangers fluctuate between positions 16, 17, and 18 (a
+relegation position). Before the 10 final matches, the league table was as is shown in Table \ref{tab:league2}.
+\begin{table}
+\centering
+\fbox{
+\begin{tabular}{clcccccccc}
+p  & team 	                  & pld  & w 	& d 	& l     & gf 	& ga 	& gd    	& pts\\
+\hline
+1  & Manchester City 	      & 37 	 & 27 	& 5 	& 5 	& 90 	& 27 	& \(+63\) 	& 86 \\
+\hline
+2  & Manchester United 	      & 37 	 & 27 	& 5 	& 5 	& 88 	& 33 	& \(+55\) 	& 86 \\
+3  & Arsenal 	              & 37 	 & 20 	& 7 	& 10 	& 71 	& 47 	& \(+24\) 	& 67 \\
+4  & Tottenham Hotspur        & 37 	 & 19 	& 9 	& 9 	& 64 	& 41 	& \(+23\) 	& 66 \\
+\hline
+5  & Newcastle United 	      & 37 	 & 19 	& 8 	& 10 	& 55 	& 48 	& \(+7\)	& 65 \\
+\hline
+6  & Chelsea 	              & 37 	 & 17 	& 10 	& 10 	& 63 	& 45 	& \(+18\) 	& 61 \\
+7  & Everton 	              & 37 	 & 14 	& 11 	& 12 	& 47 	& 39 	& \(+8\)	& 53 \\
+8  & Liverpool 	              & 37 	 & 14 	& 10 	& 13 	& 47 	& 39 	& \(+8\)	& 52 \\
+9  & Fulham 	              & 37 	 & 14 	& 10 	& 13 	& 48 	& 49 	& \(-1\)	& 52 \\
+10 & West Bromwich Albion     & 37 	 & 13 	& 8 	& 16 	& 43 	& 49 	& \(-6\)	& 47 \\
+11 & Sunderland 	          & 37 	 & 11 	& 12 	& 14 	& 45 	& 45 	& \(0\)     & 45 \\
+12 & Swansea City 	          & 37 	 & 11 	& 11 	& 15 	& 43 	& 51 	& \(-8\)	& 44 \\
+13 & Norwich City 	          & 37 	 & 11 	& 11 	& 15 	& 50 	& 66 	& \(-16\) 	& 44 \\
+14 & Stoke City 	          & 37 	 & 11 	& 11 	& 15 	& 34 	& 51 	& \(-17\) 	& 44 \\
+15 & Wigan Athletic 	      & 37 	 & 10 	& 10 	& 17 	& 39 	& 60 	& \(-21\) 	& 40 \\
+16 & Aston Villa 	          & 37 	 & 7 	& 17 	& 13 	& 37 	& 51 	& \(-14\) 	& 38 \\
+17 & Queens Park Rangers      & 37 	 & 10 	& 7 	& 20 	& 41 	& 63 	& \(-22\) 	& 37 \\
+\hline
+18 & Bolton Wanderers 	      & 37 	 & 10 	& 5 	& 22 	& 44 	& 75 	& \(-31\) 	& 35 \\
+19 & Blackburn Rovers 	      & 37 	 & 8 	& 7 	& 22 	& 47 	& 76 	& \(-29\) 	& 31 \\
+20 & Wolverhampton Wanderers  & 37 	 & 5 	& 10 	& 22 	& 38 	& 79 	& \(-41\) 	& 25 \\
+\end{tabular}}
+\caption{\label{tab:league2} The league table before the last match of the EPL 2011/2012 season. `p' denotes the league
+position, `pld' the number of matches played (note this is one less than the week of the season), `w' the number of
+matches won, `d' the number of matches drawn, `l' the number of matches lost, `gf' the number of goals for (scored),
+`ga' the number of goals against (conceded), `gd' the goal difference (`gf' - `ga'), and `pts' the league points}
+\end{table}
+
+We list in detail the main events (marked with vertical grey dashed and solid lines in Figure \ref{fig:inplay2}) which
+affected the resource allocation (behaviour) of the teams and thus the rates of scoring:
+\begin{enumerate}
+  \item Minute 9: Wolverhampton Wanderers score against Wigan Athletic, meaning if Queens Park Rangers are able to win
+  their match, they could move up to position 15.
+  \item Minute 12: Wigan Athletic score against Wolverhampton Wanderers, returning Queens Park Rangers into the
+  same situation they were in at the beginning of the match.
+  \item Minute 20: Manchester United score against Sunderland, Manchester City thus move into position 2, behind
+  Manchester United.
+  \item Minute 39: Manchester City score, and thus regain the top position.
+  \item Minute 45: Bolton score, moving Queens Park Rangers into the relegation zone (position 18).
+  \item Minute 48: Queens Park Rangers react with a shock goal, moving themselves into position 17, and also Manchester
+  City back into position 2.
+  \item Minute 66: Queens Park Rangers score again, moving themselves into a rather safe position 16 while Manchester
+  City remain in position 2. The league title appears to have slipped away.
+  \item Minute 90: In one of the most dramatic season ends, Manchester City score two goals in injury time to win 3-2
+  and claim league victory.
+\end{enumerate}
+
+We note two main points here, firstly, the model suggests that the rates of scoring can be greatly altered by Manchester
+City's behavioural changes. This is since they are a strong team with a large amount of resource. Conversely, Queens
+Park Rangers have little resource, and so their behavioural changes have little effect on the rates of scoring of the
+match. Secondly, we can see how the teams alter their behaviour as goals in concurrent matches change their league
+situation. For example at minute 20 when Manchester United score against Sunderland, Manchester City move down to
+position 2 and immediately play more offensively in an effort to score and regain position 1. Similarly, the most
+offensive behaviour from Queens Park Rangers is seen between minutes 45 and 48, where they are in position 18 (a
+relegation position).
+
+Furthermore, at minute 20 when Manchester United score against Sunderland, the combined instantaneous rate of scoring
+(\(\lambda_m(t) + \mu_m(t)\)) in the Manchester City - Queens Park Rangers match increases by almost 50\% from 2.0662
+to 3.0804, a clearly significant amount which has dramatic implications for in-play betting markets such as `total number
+of goals in the match' or `time of next goal'.
+
+\section{Concluding remarks}
+\label{sec:Concluding_remarks_utility}
+ 
+In this chapter we have presented a substantial modification to the model first presented in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section \ref{model} by
+allowing the resource allocation of teams to depend on their league situation. We were able to specify a model which
+could capture how league considerations become more important later in a season, and how teams play offensively when
+scoring means moving to a `better' league position, or play defensively when conceding means moving to a `worse' league
+position. We were also thus able to place an effective value of `utility' on each of the league positions.
+
+Two different methods of model inference and model choice were proposed:
+\begin{enumerate} 
+  \item Comparison of four hand-selected models via \gls{DIC}
+  \item Bayesian model choice using \gls{RJMCMC} to consider the entire space of models
+\end{enumerate}
+The \gls{RJMCMC} method allowed posterior model probabilities over the whole possible model space, over which we could
+average in order to infer a Bayesian model averaging estimate of the utility function \(U(p)\). The estimate of the
+utility function was in fact quite similar to our best (according to \gls{DIC}) hand-selected (from 262,144 choices)
+model.
+
+% The model was was also able to reduce to the model of Chapter
+% \ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section \ref{model} if
+% the function \(\beta(w)\) was 0 for all \(w\). Plots of the posterior samples from \(\beta(w)\) however showed the
+% function far from 0, and thus we suggest the additional model terms worthwhile.
+
+Posterior estimates of the utility function \(U(p)\) suggested a locally minimal value at position 5, a position
+granting Europa League qualification which a priori, we believed would be valuable. This finding is actually consistent
+with many on-line articles (\cite{raceToAvoidEurope, battleToAvoidEurople, spursAvoidEurople}) regarding the Europa
+League and how teams may wish to avoid the extra matches and travelling it brings - in order to focus on the much more
+prestigious/profitable \gls{EPL}.
+
+Finally, we were able to display (via an example) the magnitude of the effect league considerations had on the actual
+model rates of scoring. Using our models, we estimated that at one point, a single goal in a match between Manchester
+United and Sunderland affected the combined scoring rate of a separate match between Manchester City and Queens Park
+Rangers by almost 50\%. We thus conclude that these effects may have considerable implications for in-play betting
+markets for select matches.
+
+
+
+
+

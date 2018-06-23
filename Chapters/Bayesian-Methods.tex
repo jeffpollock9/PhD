@@ -1,0 +1,1007 @@
+
+\singlespacing
+
+\chapter{Bayesian computational methods}
+\label{ch:Bayesian_computational_methods}
+
+\onehalfspacing
+
+\section{Introduction}
+
+Here we review some of the Bayesian methods used throughout this thesis. This chapter focuses on introducing methodology
+which is further discussed and applied in later chapters. We use the notation \(\Prob(.)\) to denote value of
+probability and \(p(.)\) to denote a value of a \gls{PDF}.
+
+\section{The Bayesian approach to inference} 
+\label{sec:The_Bayesian_approach_to_inference}
+
+Their are currently two main schools of thought with statistics, each with their own approach to parameter inference.
+The Bayesian approach to inference involves assuming unknown model parameters are random variables. The Frequentist
+approach however, involves assuming that model parameters are fixed but unknown, and only an estimate of the model
+parameters, typically the \gls{MLE}, is a random variable. For a Frequentist, probability statements only make sense for
+repeatable experiments. For example a 95\% confidence interval of a model parameter means that when repeating the
+experiment and each time calculating the confidence interval, 95\% of the time the interval should contain the true
+parameter value. The interpretation of the comparable interval in the Bayesian framework, the \gls{BCI}, is much clearer
+- there is a 95\% probability the true parameter value is in said interval given the observed data.
+
+Bayes theorem (and in turn Bayesian inference) is named after the Reverend Thomas Bayes (1702-1761) whose work,
+\textit{An essay towards solving a problem in the doctrine of chances}, which contained the theorem, was published by
+Richard Price (\cite{bayes1763}). Bayes' theorem provides the conditional probability of one event given another. For
+example for events \(A\) and \(B\), the probability of observing event \(A\) given we have already observed event \(B\)
+is:
+\begin{align} 
+\Prob(A | B) = \frac{\Prob(B | A) \Prob(A)}{\Prob(B)}.
+\end{align}
+What can be slightly confusing is that Bayes' theorem is not inherently Bayesian - it is unarguable and can be easily
+derived from the definition of conditional probability. A quick derivation is given by noting the definition of
+conditional probability, \(\Prob(A \cap B) = \Prob(A | B) \Prob(B)\), and then by noting that \(\Prob(A \cap B) =
+\Prob(B \cap A)\) due to the commutativity of the \(\cap\) operator. What is Bayesian however are the methods of
+inference presented in this chapter, which all rely on Bayes' theorem.
+
+Firstly let us consider a more general formulation of Bayes' theorem relating to partitions of a sample space \(S\).
+If \(A_1, \ldots, A_n\) denote a partition of \(S\), that is, they are mutually exclusive and their union is \(S\), we
+have for any \(j \in \{1, \ldots, n\}\):
+\begin{align} 
+\Prob(A_j | B) = \frac{\Prob(B | A_j) \Prob(A_j)}{\sum_{i=1}^n \Prob(B | A_i) \Prob(A_i)}.
+\label{eq:bayes1}
+\end{align}
+Now, the Bayesian approach to inference is to treat the unknown model parameter vector \(\boldTheta\) as a random
+variable, and so inference is concerned with determining the distribution of \(\boldTheta\), given we have observed some
+data \(\data\). This means we consider what is known as the posterior distribution of \(\boldTheta\), \(p(\boldTheta |
+\data)\). In a similar vein to Equation \eqref{eq:bayes1}, the posterior distribution may be written as:
+\begin{align}
+\label{eq:bayes2}
+p(\boldTheta | \data) = \frac{p(\data | \boldTheta) p(\boldTheta)}{\int p(\data | \boldTheta') p(\boldTheta') \, \mathrm{d}\boldTheta'}
+\end{align}
+where \(p(\data | \boldTheta)\) is the likelihood function (which will be determined by the choice of model employed)
+and \(p(\boldTheta)\) is the prior density function. The prior \(p(\boldTheta)\) is chosen to reflect any information
+regarding the model parameters \(\boldTheta\), and the ability to incorporate such information is one of the benefits
+(but also main criticisms) of the Bayesian approach to inference. Note that Equation \eqref{eq:bayes2} includes a
+constant normalising factor, \(\int p(\data | \boldTheta') p(\boldTheta') \mathrm{d}\boldTheta'\). In many of the
+Bayesian methods, we need only be concerned with the posterior distribution up to a constant of proportionality, and
+thus we use:
+\begin{align}
+\label{eq:bayes_prop}
+p(\boldTheta | \data) \propto p(\data | \boldTheta) p(\boldTheta)
+\end{align}
+which is often referred to as Bayes' rule (as opposed to Bayes' theorem).
+
+\subsection{Bayesian versus Frequentist}
+\label{sec:Bayesian_versus_Frequentist}
+
+The Bayesian framework naturally allows us to make probability statements around model parameters, for example we can
+compute \(\Prob(\theta_1 > \theta_2)\) by considering posterior probabilities. The equivalent Frequentist approach would
+be to use a hypothesis test of \(H_0: \theta_1 = \theta_2\) against \(H_1: \theta_1 > \theta_2\) and calculate a
+p-value, rejecting \(H_0\) in favour of \(H_1\) if the p-value is less than the chosen significance level, usually a
+somewhat arbitrary 0.05. In fact, in 2015 the academic journal `Basic and Applied Social Psychology' banned the use of
+p-values stating `We believe that the \(p < 0.05\) bar is too easy to pass and sometimes serves as an excuse for lower
+quality research' (\cite{pvalueban}). Others have also been critical of the use of p-values for example
+\cite{colquhoun2014} who made the rather bold statement `if you use \(p = 0.05\) to suggest that you have made a
+discovery, you will be wrong at least 30\% of the time'. The false positive rate of at least 30\% is however somewhat
+misleading - it is based on the assumptions of real effects being present in only 10\% of experiments, and an underlying
+statistical power of 80\%. If 100\% of experiments contained real effects, the false discovery rate would be 0\%, and
+similarly, the false discovery rate would decrease as the statistical power increased - so the results are highly
+sensitive to the assumptions made.
+There are numerous discussions of p-values, both old and new (\cite{casella1987, ioannidis2005, Senn2015}), what is
+important to take from all this debate however is that p-values should not represent the end of a statistical analysis,
+but rather the beginning.
+
+The Bayesian approach also very naturally propagates uncertainty surrounding estimates of model parameters, which is
+contained in the posterior distribution. Frequentists typically rely on an asymptotic normality assumption of the
+\gls{MLE} in order to describe uncertainty of model parameter estimates. There are no such assumptions in the Bayesian
+approach and furthermore, a Bayesian analysis can provide credible intervals for parameters or any function of the
+parameters which are more easily interpreted than the concept of confidence interval in a Frequentist setting.
+
+Finally (in terms of pro Bayesian arguments), in some areas inference has only been possible with a Bayesian framework.
+For example, when there are cases of missing data which prevent the calculation of the likelihood function, authors like
+\cite{streftaris2004} have successfully managed to infer model parameters in a Bayesian framework using data
+augmentation to infer the missing data.
+
+The main criticism of the Bayesian approach regards the choice of prior distributions, in that the choice is completely
+subjective. For example two Bayesian statisticians who are very confident in their own, differing, opinion of the likely
+values of model parameters may choose to use quite different prior distributions. The two statisticians may then come to
+different conclusions regarding model parameters (in particular if the data sample is small then the posterior
+distribution can be quite sensitive to the choice of prior). In this case the difference has not come from the data - it
+has emerged based on the statistician's opinion. Frequentists typically believe that conclusions must be based solely on
+the data and Frequentists should always come to the same conclusions regarding model parameters.
+
+Many however see the prior distribution as an asset to the Bayesian statistician's toolbox. It offers the chance to
+include further information and experience into the belief surrounding model parameters, and extra information should
+always be appropriately used when available. Sports modelling presents an ideal example for when informative priors can
+and should be used. For example we have knowledge of the likely values of model parameters based on our experiences of
+years of watching association football and the vast amount of historical data on the game. Informative priors are used
+for model parameters throughout this thesis.
+
+In response to the criticism of the use of subjective prior distributions, much research has been discussed on
+`non-informative' priors. We discuss the non-informative prior in the following section.
+
+\subsection{The non-informative prior}
+
+An obvious choice of a non-informative prior is the uniform distribution over an allowable/sensible parameter range, or
+to follow Laplace and choose \(p(\boldTheta) = 1\) (\cite{berger1992}), however, this approach may not be as
+non-informative as one might first believe. For example if \(\psi \in [0, 1]\) is the model parameter of interest, one
+may elicit the `non-informative' prior \(\psi \sim U(0, 1)\). This however implies \(\psi^2 \sim B(\frac{1}{2}, 1)\),
+suggesting \(\psi^2\) is closer to 0 than 1, so the prior is non-informative regarding \(\psi\) but not \(\psi^2\). That
+is, the approach of the non-informative uniform prior is not invariant under transformations of the model parameters -
+different model parameterisations may lead to different posterior distributions.
+
+This lack of invariance prompted the development of a non-informative prior which was also invariant under parameter
+transformations. \cite{jeffreys1946} thus proposed what is known as the \textit{Jeffreys' prior}:
+\begin{align}
+p(\boldTheta) \propto \sqrt{\det(I(\boldTheta))}
+\end{align}
+where:
+\begin{align}
+I(\boldTheta) = -\E \left( \frac{\mathrm{d} \log(p(\data | \boldTheta))}{\mathrm{d} \boldTheta^2}   
+\right)
+\end{align}
+is the \textit{Fisher information}. The prior is most often improper, that is, it does not integrate to a finite value,
+and furthermore, the `non-informative' label may be somewhat misleading - the prior requires input from the statistician via
+the statistical model employed.
+
+Objective Bayesian methods (in which the analysis is data-driven) have been most notably furthered by
+\cite{bernardo1979, berger1992, berger2009} who discuss a `reference prior'. The resulting `reference posterior'
+provides a standard to which posterior distributions, formed from using different priors based on subjective or
+objective items of information, may be compared. The intuition behind the reference prior is that is it the prior which
+maximises the distance or divergence between the posterior and prior distribution so that the data have maximum effect
+on the posterior distribution. A sensible question is `how can you choose a prior to maximise the divergence between the
+prior and posterior distributions before you have seen any data?' The answer is that reference priors deal with the
+expectation of the divergence, given a statistical model.
+
+One commonly used divergence measure is the \textit{Kullback-Leibler divergence} introduced by \cite{kullback1951}.
+If we consider a sufficient statistic \(T = T(\data)\), the Kullback-Leibler divergence for the prior and posterior
+distributions is:
+\begin{align} 
+D_{KL} = \int p(\boldTheta | t) \log\left(\frac{p(\boldTheta | t)}{p(\boldTheta)}\right)\, \mathrm{d}\boldTheta
+\end{align}
+where \(t\) is an observation of \(T\). The expectation of \(D_{KL}\) over the distribution of \(T\) is:
+\begin{align} 
+\E(D_{KL})
+&= \int p(t) \int p(\boldTheta | t) \log\left(\frac{p(\boldTheta | t)}{p(\boldTheta)}\right)\,
+\mathrm{d}\boldTheta \mathrm{d}t \\
+&= \int \int p(\boldTheta, t) \log\left(\frac{p(\boldTheta, t)}{p(\boldTheta) p(t)}\right)\,
+\mathrm{d}\boldTheta \mathrm{d}t
+\end{align}
+which may be recognised as the mutual information between \(\boldTheta\) and \(t\). Thus, the reference prior involves
+finding \(p(\boldTheta)\) which maximises this mutual information.
+
+As noted by \cite{berger1992}, this method is typically very hard to implement. It is however consistent with the
+Jeffreys' prior for the single parameter case, and it is generally much more recommended in the multi-parameter case due
+to the shortcomings of the Jeffreys' prior in a multivariate setting - as acknowledged by Jeffreys himself
+(\cite{jeffreys1946}).
+
+\section{MCMC}
+\label{sec:MCMC_overview}
+
+% \begin{align} 
+% p(\boldTheta | \data) = \frac{1}{n} \sum_{i=1}^{n} \delta_{\boldTheta_i}(\boldTheta)
+% \end{align}
+% where \(\delta_{\boldTheta_i}(\boldTheta)\) is the Dirac delta measure located at \(\boldTheta_i\). Furthermore, by the strong law
+% of large numbers we also have:
+% \begin{align} 
+% I = \frac{1}{n} \sum_{i=1}^{n} f(\boldTheta_i) \xrightarrow{a.s.} \int f(\boldTheta) p(\boldTheta | \data) \, \mathrm{d}\boldTheta \quad
+% \text{ as } n \rightarrow \infty
+% \end{align}
+% for some function \(f\), for example \(f(\boldTheta) = \boldTheta\) which results in \(I\) being the posterior mean of
+% \(\boldTheta\), \(\mathbb{E}(\boldTheta | \data)\). We can quickly see that having a Monte Carlo sample from the posterior
+% distribution of \(\boldTheta\) is sufficient in which to base inference upon.
+
+% The stationary distribution of the Markov chain, \(\boldsymbol{\pi}\), is a unique distribution such that:
+% \begin{align} 
+% \boldsymbol{\pi} = \boldsymbol{\pi} \boldsymbol{T}
+% \end{align}
+% furthermore, for any initial distribution \(\boldsymbol{q}\) we have that \(\boldsymbol{q} \boldsymbol{T}^k\) tends to
+% \(\boldsymbol{\pi}\) as \(k \rightarrow \infty\). That is, that no matter what the initial distribution of the chain is,
+% after a sufficient number of steps the distribution of the state of the chain will approach \(\boldsymbol{\pi}\) and
+% will be independent of the initial distribution \(\boldsymbol{q}\). Thus if we simulate the process starting from any of the
+% states in \(S\), after a sufficient amount of time steps, we will be able to take samples from the stationary
+% distribution \(\boldsymbol{\pi}\). 
+
+% It has also been suggested that their is an optimal acceptance rate within the \gls{MH} algorithm, that is, the
+% proportion of proposals \(\boldTheta'\) that are accepted. Intuitively, the proposal density
+% \(q(\boldTheta'|\boldTheta_t)\) should be chosen so that the acceptance rate is not close to 0 (the proposals are never
+% accepted, for example when the proposal distribution has very high variance, and the chain is stuck) and not close to 1
+% (the proposals are always accepted, for example when the proposal distribution has very small variance, and the chain
+% moves very slowly) but somewhere in the middle. \cite{roberts1997} have suggested that the optimal acceptance rate is
+% 0.234 but it is widely accepted that this represents merely a ballpark figure, for example in `Optimal acceptance rates
+% for Metropolis algorithms: Moving beyond 0.234' \cite{bedard2008}. For \gls{MH} algorithms implemented in this thesis we
+% are satisfied with acceptance rates between 0.15 and 0.4.
+
+In most cases, the form of the posterior distribution \(p(\boldTheta | \data)\) is analytically intractable. For
+example, for the chosen prior distributions and model specifications employed in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information}, \(p(\boldTheta |
+\data) \propto p(\data | \boldTheta) p(\boldTheta)\) does not conform to a recognisable distribution. As a result, many
+Bayesian analyses use sampling methods to approximate the distribution of the posterior \(p(\boldTheta | \data)\), of
+which \gls{MCMC} is the most popular. \gls{MCMC} methods are inherently very computationally demanding, and so have only
+been possible with advances in computing power.
+
+The basic Monte Carlo principle is to draw an independent and identically distributed set of samples \(\{\boldTheta_1,
+\ldots, \boldTheta_n\}\) from our target distribution (the posterior \(p(\boldTheta | \data)\)) which may be used
+directly for parameter inference and prediction. The \(n\) samples can be used to approximate the expectation:
+\begin{align}
+\E(f(\boldTheta | \data)) 
+&= \int f(\boldTheta) p(\boldTheta | \data)\, \mathrm{d}\boldTheta \notag\\
+&\approx \frac{1}{n} \sum_{i=1}^{n} f(\boldTheta_i)
+\label{eq:MCapprox}
+\end{align}
+for some function \(f\) which must be Lebesgue integrable with respect to \(p(\boldTheta | \data)\) in order for the
+expectation to exist. The strong law of large numbers then holds and the approximation becomes more accurate as \(n
+\rightarrow \infty\). It is thus possible to approximate features such as the posterior mean using \(f(\boldTheta) =
+\boldTheta\), or posterior probabilities like \(\Prob(\boldTheta < \boldsymbol{L} | \data)\) using \(f(\boldTheta) =
+I(\boldTheta < \boldsymbol{L})\) (the indicator function which is 1 if the comparison is true and 0 otherwise). We can
+quickly see that having a Monte Carlo sample from the posterior distribution of \(\boldTheta\) is sufficient to enable
+inference to be made.
+
+In order to generate the Monte Carlo sample, we seek to create a Markov chain where the stationary distribution
+corresponds to our posterior distribution. We firstly consider a discrete state-space \(S = \{s_1, \ldots s_m\}\) for
+the purposes of illustration of the ideas of Markov chains, before describing methods relating to continuous
+state-spaces in Section \ref{sec:The_Metropolis-Hastings_algorithm}. The extension to continuous state-spaces do not
+require any new concepts (\cite{roberts1996Book, tierney1996}).
+
+A Markov chain is a stochastic process which takes values in \(S\) at discrete time points \(t\) while satisfying the
+following condition: if the state of the chain at time \(t\) is \(X_t\), then the distribution of \(X_t\) conditional on
+\(X_1, \ldots, X_{t-1}\) is the same as the distribution of \(X_t\) conditional only on \(X_{t-1}\). That is:
+\begin{align} 
+\Prob(X_t | X_1, \ldots, X_{t-1}) = \Prob(X_t | X_{t-1})
+\end{align}
+in words, the future states which the process takes depend only on the current state and not the past. This finite state
+Markov Chain is defined by a \(m \times m\) transition matrix \(\boldsymbol{T}\) where entry \(T_{i, j}\) contains
+\(\Prob(X_{t+1} = s_j | X_t = s_i)\) for all integer values of \(t \geq 0\). Furthermore, if \(\boldsymbol{q}\) is a row
+vector of length \(m\) (like all the distributions we will be concerned with here) containing the distribution of the
+Markov chain state at time 0 so \(q_i = \Prob(X_0 = s_i)\), then the distribution of the Markov chain state at time
+\(1\) is \(\boldsymbol{q} \boldsymbol{T}\). It follows by repeated application of the matrix multiplication that
+\(\boldsymbol{q} \boldsymbol{T}^k\) is the the distribution of the Markov chain state at time \(k\).
+
+\cite{roberts1996Book} succinctly describes the three properties which \(\boldsymbol{T}\) must satisfy in order for the
+corresponding Markov chain to converge to stationary distribution \(\boldsymbol{\pi}\):
+\begin{enumerate}
+  \item \textit{Irreducible}. That it is possible for the Markov process to reach any state \(s_i\) from any state
+  \(s_j\) within a finite number of time steps. That is, the Markov chain transition graph is connected
+  \item \textit{Aperiodic}. The chain does not oscillate between different sets of states in a regular periodic
+  movement. In other words, the Markov chain transition graph has period 1
+  \item \textit{Positive recurrent}. If an initial value \(x_0\) is sampled from \(\boldsymbol{\pi}\) then \(x_1\)
+  and all subsequent iterates will also be distributed according to \(\boldsymbol{\pi}\). In terms of the stationary
+  distribution \(\boldsymbol{\pi}\), this implies \(\boldsymbol{\pi} = \boldsymbol{\pi} \boldsymbol{T}\)
+\end{enumerate}
+
+The positive recurrent property can sometimes be shown by demonstrating that a stronger property holds, known as
+\textit{detailed balance}:
+\begin{align} 
+\pi_i T_{i, j} = \pi_j T_{j, i} \quad \text{for all \(i, j\)}.
+\end{align}
+Furthermore, summing both sides over \(j\) yields:
+\begin{align} 
+\pi_i = \sum_{j=1}^m \pi_j T_{j, i}
+\label{eq:discreteProb}
+\end{align}
+since \(\sum_{j=1}^m \pi_i T_{i, j} = \pi_i \sum_{j=1}^m T_{i, j} = \pi_i\), it then follows that \(\boldsymbol{\pi} =
+\boldsymbol{\pi} \boldsymbol{T}\). Detailed balance can also be seen as a reversibility condition. In words, it means
+that the probability of the Markov chain being in state \(s_i\) and moving from \(s_i\) to \(s_j\) must be the equal to
+the probability of being in state \(s_j\) and moving from \(s_j\) to \(s_i\).
+
+% The stationary distribution \(\boldsymbol{\pi}\) satisfies what is known as \textit{detailed balance}:
+% \begin{align} 
+% \pi_i T_{i, j} = \pi_j T_{j, i}
+% \end{align}
+% furthermore, summing both sides over \(j\) yields:
+% \begin{align} 
+% \pi_i = \sum_{j=1}^m \pi_j T_{j, i}
+% \label{eq:discreteProb}
+% \end{align}
+% since \(\sum_{j=1}^m \pi_i T_{i, j} = \pi_i \sum_{j=1}^m T_{i, j} = \pi_i\), it then follows that \(\boldsymbol{\pi} =
+% \boldsymbol{\pi} \boldsymbol{T}\). Detailed balance can also be seen as a reversibility condition. In words, it means
+% that the probability of the Markov chain being in state \(s_i\) and moving from \(s_i\) to \(s_j\) must be the equal to
+% the probability of being in state \(s_j\) and moving from \(s_j\) to \(s_i\).
+
+Thus for any initial distribution \(\boldsymbol{q}\) and a transition matrix which is \textit{irreducible},
+\textit{aperiodic}, and satisfies \(\boldsymbol{\pi} = \boldsymbol{\pi} \boldsymbol{T}\), we have that \(\boldsymbol{q}
+\boldsymbol{T}^k\) tends to \(\boldsymbol{\pi}\) as \(k \rightarrow \infty\). That is, that no matter what the initial
+distribution of the chain is, after a sufficient number of steps the distribution of the state of the chain will
+approach \(\boldsymbol{\pi}\) and will be independent of the initial distribution \(\boldsymbol{q}\). Thus if we
+simulate the process starting from any of the states in \(S\), after a sufficient amount of time steps, we will be able
+to take samples from the stationary distribution \(\boldsymbol{\pi}\).
+
+\subsection{The Metropolis-Hastings algorithm}
+\label{sec:The_Metropolis-Hastings_algorithm}
+
+In Section \ref{sec:MCMC_overview} we reviewed some of the theory of how a Markov chain can be defined by its
+transition matrix \(\boldsymbol{T}\) in order to have some stationary distribution over a discrete state-space \(S\).
+Here, we review the \gls{MH} algorithm (\cite{Metropolis1953}, \cite{Hastings1970}) which ensures the stationary
+distribution of the Markov chain is our posterior distribution of interest over a continuous state-space.
+
+It is intuitive that Markov chains can be used in cases where the state-space is discrete, however the theory of Markov
+chains in a continuous state-space is nearly identical after replacing the discrete stationary distribution
+\(\boldsymbol{\pi}\) with a continuous posterior density function \(p(\boldTheta | \data)\), discrete sums with
+continuous integrals, and the discrete support transition matrix \(\boldsymbol{T}\) with a continuous support transition
+kernel \(K\). For example, in a continuous state-space setting we may write Equation \eqref{eq:discreteProb} as:
+\begin{align} 
+p(\boldTheta_{t+1} | \data) = \int p(\boldTheta_t | \data) K(\boldTheta_{t+1} | \boldTheta_t) \, \mathrm{d}\boldTheta_t
+\end{align}
+so the kernel \(K\) is the conditional density of \(\boldTheta_{t+1}\) given \(\boldTheta_t\), where \(\boldTheta_t\)
+denotes the state of the chain at time \(t\).
+
+The \gls{MH} algorithm is commonly referred to as the most popular \gls{MCMC} method (\cite{hitchcock2003}) and is the
+base for many other algorithms which are special cases or extensions, for example the Gibbs sampler (\cite{geman1984})
+which we review in Section \ref{sec:The_Gibbs_sampler}. An outline of the algorithm is as follows:
+
+Let the state of the chain at time \(t\) be \(\boldTheta_t\) where \(\boldTheta_0\) is some user-specified value. Then
+with a user-specified proposal distribution \(q(\boldTheta'|\boldTheta_t)\), repeat the following steps for \(t=0,
+\ldots, n\):
+\begin{enumerate} 
+  \item Sample \(\boldTheta'\) from the proposal density \(q(\boldTheta'|\boldTheta_t)\)
+  \item Calculate the acceptance probability \(\alpha(\boldTheta', \boldTheta_t)\)
+  \item With probability \(\alpha(\boldTheta', \boldTheta_t)\) set \(\boldTheta_{t+1} = \boldTheta'\), otherwise \(\boldTheta_{t+1} =
+  \boldTheta_t\)
+\end{enumerate}
+The acceptance probability is given by:
+\begin{align} 
+\alpha(\boldTheta', \boldTheta_t) &= \min\left(1, 
+\frac{p(\boldTheta' | \data)}{p(\boldTheta_t | \data)} \times \frac{q(\boldTheta_t | \boldTheta')}{q(\boldTheta' |
+\boldTheta_t)} \right)\notag \\ 
+&= \min\left(1, 
+\frac{p(\data | \boldTheta')}{p(\data | \boldTheta_t)} \times \frac{p(\boldTheta')}{p(\boldTheta_t)} \times \frac{q(\boldTheta_t |
+\boldTheta')} { q(\boldTheta' | \boldTheta_t)}
+\right).
+\end{align}
+Note that the appearance of the ratio in the acceptance probability means that the posterior normalising factor (seen in
+Equation \eqref{eq:bayes2}) cancels. The transition kernel for the \gls{MH} algorithm from point current state
+\(\boldTheta_t\) to the next state \(\boldTheta_{t+1}\) is:
+\begin{align} 
+\label{eq:kernel_MH}
+K(\boldTheta_{t+1} | \boldTheta_t) = q(\boldTheta_{t+1} | \boldTheta_t) \alpha(\boldTheta_{t+1}, \boldTheta_t) + \delta_{\boldTheta_t}(\boldTheta_{t+1})
+\int q(\boldTheta^* | \boldTheta_t) (1 - \alpha(\boldTheta^*, \boldTheta_t)) \, \mathrm{d}\boldTheta^*
+\end{align}
+where \(\delta_{\boldTheta_t}(\boldTheta_{t+1})\) is the Dirac delta measure located at \(\boldTheta_t\). The 
+first term on the right hand side of Equation \eqref{eq:kernel_MH} corresponds to an accepted proposal, and the second a
+rejected proposal. For further details on the transition kernel of the \gls{MH} algorithm, see for example
+\cite{tierney1998}.
+
+It can be proved that the Markov chain produced by the \gls{MH} algorithm converges and has the desired stationary
+distribution \(p(\boldTheta | \data)\) by considering the three properties described in Section \ref{sec:MCMC_overview}.
+Firstly, the chain is irreducible so long as the proposal density \(q(\boldTheta' | \boldTheta_t)\) allows the chain to
+cover the support of the posterior \(p(\boldTheta | \data)\). Secondly, the chain is aperiodic since a rejected proposal
+implies \(\boldTheta_{t+1} = \boldTheta_t\). Finally, we show the chain is positive recurrent by demonstrating that
+detailed balance holds, that is:
+\begin{align} 
+\label{eq:detailed_balance_MH}
+K(\boldTheta_{t+1} | \boldTheta_t) p(\boldTheta_t | \data) = K(\boldTheta_t | \boldTheta_{t+1}) p(\boldTheta_{t+1} | \data).
+\end{align}
+In the case of a rejected proposal we have \(\boldTheta_{t+1} = \boldTheta_t\) and so Equation \eqref{eq:detailed_balance_MH}
+clearly holds. In the case of an accepted proposal we have:
+\begin{align} 
+K(\boldTheta_{t+1} | \boldTheta_t) &= q(\boldTheta_{t+1} | \boldTheta_t) \alpha(\boldTheta_{t+1}, \boldTheta_t) \notag \\
+&= \min\left(q(\boldTheta_{t+1} | \boldTheta_t), 
+\frac{p(\boldTheta_{t+1} | \data) q(\boldTheta_t | \boldTheta_{t+1})}{p(\boldTheta_t | \data)}\right)
+\end{align}
+and therefore:
+\begin{align} 
+K(\boldTheta_{t+1} | \boldTheta_t) p(\boldTheta_t | \data) 
+&= \min\left(p(\boldTheta_t | \data) q(\boldTheta_{t+1} | \boldTheta_t), 
+p(\boldTheta_{t+1} | \data) q(\boldTheta_t | \boldTheta_{t+1})\right) \notag \\
+&= K(\boldTheta_t | \boldTheta_{t+1}) p(\boldTheta_{t+1} | \data)
+\end{align} 
+by noting that \(\boldTheta_t\) and \(\boldTheta_{t+1}\) are symmetric inside the \(\min\) function. We now have proof of
+Equation \eqref{eq:detailed_balance_MH}, that is, the \gls{MH} algorithm produces a Markov Chain which converges to
+a stationary distribution of \(p(\boldTheta | \data)\).
+
+% The chain is clearly aperiodic since it allows for rejection and the
+% irreducibility condition is also satisfied if the proposal density \(q(\boldTheta' | \boldTheta_t)\) allows the chain to
+% cover the support of the posterior \(p(\boldTheta | \data)\). Furthermore, we can show that a \gls{MH} move satisfies
+% detailed balance by considering the move from \(\boldTheta_t\) to \(\boldTheta_{t+1}\) and showing that the following
+% holds:
+
+Much research has been undertaken regarding the optimal acceptance rate within the \gls{MH} algorithm, that is, the
+proportion of proposals \(\boldTheta'\) that are accepted. Intuitively, the proposal density
+\(q(\boldTheta'|\boldTheta_t)\) should be chosen so that the acceptance rate is not close to 0 (the proposals are never
+accepted, for example when the proposal distribution has very high variance, and the chain is `stuck') and not close to
+1 (the proposals are always accepted, for example when the proposal distribution has very small variance, and the chain
+moves very slowly).
+
+A common choice for the proposal density is \(q(\boldTheta' | \boldTheta_t) = N(\boldTheta_t, \sigma^2)\) where the user
+may tune \(\sigma^2\) to achieve a certain acceptance rate, the resulting algorithm is known as \textit{random-walk}
+\gls{MH}. Also of note is \(q(\boldTheta' | \boldTheta_t) = q(\boldTheta')\) which results in the \textit{independence
+sampler} algorithm.
+
+\cite{roberts1997} (the original work was published in 1994) were the first authors to publish theoretical results
+regarding the optimal acceptance rate, and suggested a commonly cited value of 0.234. This value was obtained however
+under the assumption of a high-dimensional target distribution made of \gls{IID} components. \cite{gelman1996} provided
+some theoretical justification for acceptance rates in the range of 0.15 to 0.5, but note that these values do not
+guarantee efficiency of the algorithm, in particular when sampling from a highly multi-modal distribution. More
+recently, \cite{bedard2008} warned statisticians of the problems of blindly tuning a \gls{MH} algorithm to the 0.234
+rule, and showed that when the assumption of \gls{IID} components was relaxed, the optimal acceptance rate may be far
+from 0.234. For \gls{MH} algorithms implemented in this thesis we follow \cite{gelman1996} and are satisfied with
+acceptance rates between 0.15 and 0.5.
+
+Algorithm \ref{MH_algorithm} provides an implementation of the \gls{MH} algorithm which takes \(n\) samples for \(d\)
+parameters, and stores the sample from each iteration in the rows of a matrix denoted by \(\boldsymbol{S}\). The
+algorithm performs updates to each of the \(d\) parameters separately.
+\begin{algorithm}
+\caption{\label{MH_algorithm} MH algorithm} 
+\begin{algorithmic}[1]
+
+\Procedure{MH}{$n$, $m$}
+\State \(\boldTheta = (\theta_0^{(1)}, \ldots, \theta_{0}^{(d)})\)
+\State \(\boldsymbol{S}\) = Matrix(\(n\), \(d\))
+\For{\(t\) = 1 to \(n\)}
+  \For{\(p\) = 1 to \(d\)}
+    \State \(\boldTheta' = \boldTheta\)
+    \State \(\theta'_p = q(\theta_p)\)
+    \State \(\text{logD} = \log(p(\data | \boldTheta))  + \log(p(\boldTheta))  + \log(q(\theta'_p | \theta_p))\)
+    \State \(\text{logN} = \log(p(\data | \boldTheta')) + \log(p(\boldTheta')) + \log(q(\theta_p | \theta_p'))\)
+    \If{\(u() < \exp(logN - logD)\)}
+      \State \(\theta_p = \theta^\prime_p\)
+    \EndIf
+    \State \(S_{t, p}\) = \(\theta_p\)
+  \EndFor
+\EndFor
+\EndProcedure
+
+\Statex
+
+\Function{$q$}{$x$}
+  \State \Return{random draw from the proposal density \(q(x' | x)\)}
+\EndFunction
+
+\Statex
+
+\Function{\(u\)}{ }
+  \State \Return{random draw from \(U(0, 1)\)}
+\EndFunction
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{The Gibbs sampler}
+\label{sec:The_Gibbs_sampler}
+
+We describe the Gibbs sampler for a \(d\) dimensional posterior \(p(\boldTheta | \data)\) with \(\boldTheta =
+(\theta^{(1)}, \ldots, \theta^{(d)})\). The Gibbs sampler relies on simulation from the conditional posterior density of
+\(\theta^{(i)}\) given all other parameters in \(\boldTheta\) for all \(i = 1, \ldots, d\). For a
+user-specified starting value \(\boldTheta_0\), the Gibbs sampler algorithm repeats the following steps for \(t = 0,
+\ldots, n\):
+\begin{itemize}
+  \item[1.] sample \(\theta^{(1)}_{t+1}\) from conditional density \(p(\theta^{(1)} | \data, \theta^{(2)}_t, \ldots,
+  \theta^{(d)}_t)\)
+  \item[2.] sample \(\theta^{(2)}_{t+1}\) from conditional density \(p(\theta^{(2)} | \data, \theta^{(1)}_{t+1},
+  \theta^{(3)}_t, \ldots, \theta^{(d)}_t)\)
+  \item[] \hspace{1cm} \vdots
+  \item[k.] sample \(\theta^{(k)}_{t+1}\) from conditional density \(p(\theta^{(k)} | \data, \theta^{(1)}_{t+1},
+  \ldots, \theta^{(k-1)}_{t+1}, \theta^{(k+1)}_t, \ldots, \theta^{(d)}_t)\)
+  \item[] \hspace{1cm} \vdots
+  \item[d.] sample \(\theta^{(d)}_{t+1}\) from conditional density \(p(\theta^{(d)} | \data, \theta^{(1)}_{t+1},
+  \ldots, \theta^{(d-1)}_{t+1})\)
+\end{itemize}
+The key note from this algorithm is that after having updated a component, the updated value must be used when we
+condition on it in subsequent samples. 
+
+It can be shown that the Gibbs sampler is a composition of \gls{MH} moves where the proposed value is always accepted.
+To illustrate this we consider the simple two dimensional case, the extension to higher dimensions follows similarly.
+Consider \(\boldTheta = (\theta^{(1)}, \theta^{(2)})\) and a proposal to update component \(\theta^{(1)}\) of
+\(\theta'\) at current time \(t\) where the state is \(\boldTheta_t = (\theta^{(1)}_t, \theta^{(2)}_t)\). The \gls{MH}
+acceptance probability is given by:
+\begin{align} 
+\alpha &= \min\left(1, 
+\frac{p(\theta', \theta^{(2)}_t | \data)}
+{p(\theta^{(1)}_t, \theta^{(2)}_t | \data)} \times 
+\frac{p(\theta^{(1)}_t | \data, \theta^{(2)}_t)}
+{p(\theta' | \data, \theta^{(2)}_t)} \right) \notag\\
+&= \min\left(1, 
+\frac{p(\theta', \theta^{(2)}_t | \data)}
+{p(\theta^{(1)}_t, \theta^{(2)}_t | \data)} \times 
+\frac{p(\theta^{(1)}_t, \theta^{(2)}_t | \data)}
+{p(\theta^{(2)}_t)} \times
+\frac{p(\theta^{(2)}_t)}
+{p(\theta', \theta^{(2)}_t | \data)}
+\right) \notag\\
+&= 1.
+\end{align}
+The update step of \(\theta^{(2)}\) follows similarly when conditioning on \(\theta^{(1)}_{t+1} = \theta'\). 
+
+Since a Gibbs move is a special case of a \gls{MH} move, it follows that each individual Gibbs component update
+satisfies detailed balance as described in Section \ref{sec:The_Metropolis-Hastings_algorithm}. It is also clear that
+the chain will be irreducible since the support of the conditional posterior densities covers the same support as the
+full posterior distribution. It may not however be obvious that the chain is aperiodic since the chain does not allow
+for rejections. However it is difficult to imagine a sequence of conditional posterior distributions that would `force'
+the chain away from the current value. We refer the reader to \cite{roberts1994} for more technical details regarding
+the convergence of the Gibbs sampler and a proof of the aperiodicity of the Gibbs sampler.
+
+The Gibbs sampler is in some ways simpler than the \gls{MH} algorithm since it does not require tuning of the proposal
+density in order to acquire satisfactory mixing of the Markov chain. It does however require simulation from particular
+conditional distributions which may not always be straightforward, as is the case in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} and onwards. It should
+also be noted that it is perfectly acceptable to mix the Gibbs sampling and \gls{MH} algorithm sampling steps, with
+Gibbs updating steps for some components and \gls{MH} updating steps for others.
+
+Algorithm \ref{Gibbs_sampler} provides an implementation of the Gibbs sampling algorithm which takes \(n\) samples for
+\(d\) parameters, and stores the sample from each iteration in the rows of a matrix denoted by \(\boldsymbol{S}\). The
+algorithm performs updates to each of the \(d\) parameters separately.
+\begin{algorithm}
+\caption{\label{Gibbs_sampler} Gibbs sampler algorithm} 
+\begin{algorithmic}[1]
+
+\Procedure{Gibbs}{$n$, $d$}
+\State \(\boldTheta = (\theta_0^{(1)}, \ldots, \theta_{0}^{(d)})\)
+\State \(\boldsymbol{S}\) = Matrix(\(n\), \(d\))
+\For{t = 1 to \(n\)}
+  \For{\(p\) = 1 to \(d\)}
+    \State \(\theta_p = q(\boldTheta, p)\)
+    \State \(S_{t, p}\) = \(\theta_p\)
+  \EndFor
+\EndFor
+\EndProcedure
+
+\Statex
+
+\Function{$q$}{$\boldTheta, p$}
+  \State \Return{random draw from the conditional density\par
+                 \hskip\algorithmicindent\hskip\algorithmicindent \(p(\theta^{(p)} | \data, \theta^{(1)}, \ldots,
+                 \theta^{(p-1)}, \theta^{(p+1)}, \ldots, \theta^{(d)})\)}
+\EndFunction
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Burn-in, thinning, and convergence diagnostics}
+
+Although algorithms like \gls{MH} are guaranteed to produce Markov chains which converge, there is no guarantee on how
+many time steps this may take. In particular, time to converge may be long if the chain is initialised in a position of
+low posterior probability. Furthermore, after a sufficient number of steps have been taken and the chain has converged,
+adjacent samples may exhibit high dependence (positive auto-correlation), breaking the independence assumption of a
+Monte Carlo sample.
+
+One solution to the two above mentioned problems is the use of burn-in and thinning. To burn samples means to exclude
+the first \(B\) samples from analysis, \(B\) is typically determined by visual inspection of trace plots to see how long
+it takes for the sampled value to `settle'. To thin samples means to only use every \(T\)-th sample, with \(T\) usually
+determined by visual inspection of auto-correlation plots to see what value of \(T\) would ensure that adjacent samples
+are sufficiently independent.
+
+The strategies of burn-in and thinning are however very wasteful. They involve discarding information, which should be a
+statistical sin. Authors like \cite{geyer2011} suggest that instead of burn, `any point you don't mind having in a
+sample is a good starting point' and suggest practical ways of initialising the Markov chain so no burn-in is required.
+For example practising statisticians may run \gls{MCMC} procedures multiple times, in particular if using the \gls{MH}
+algorithm which requires the tuning of the proposal distribution based on the acceptance rate. Thus a good rule to
+follow is to initialise each Markov chain where the previous one ended. Alternatively, it may be possible to initialise
+the Markov chain at the posterior mode which can sometimes be found via optimisation methods, or the \gls{MLE} may be a
+good starting point if there is thought to be little influence of the prior on the posterior distribution.
+
+The smallest amount of thinning involves discarding every 2nd sample, so at best, thinning involves immediately halving
+the sample size. \cite{link2012} show results from simulations suggesting that estimation of posterior features is more
+precise when based on un-thinned chains, which is intuitive since they use more information. Furthermore, for unbiased
+estimation of a posterior expectation using Equation \eqref{eq:MCapprox}, there is no requirement for independence
+within the \gls{MCMC} samples.
+
+Estimation of standard errors of estimates (\gls{MCMC} error) however does require independent samples. A useful
+reference for this point (and many others related to \gls{MCMC}) is the discussion paper by \cite{kass1998}. For example
+Carlin describes how it is perfectly fine to estimate the posterior mean with the the sample mean \(\bar{\boldTheta} =
+\frac{1}{n} \sum_{i=1}^{n} \boldTheta_i\), since the estimate is unbiased even if the samples are not independent.
+However calculation the sample variance \(\boldsymbol{s}^2 = \frac{1}{n-1} \sum_{i=1}^{n} (\boldTheta_i -
+\bar{\boldTheta})^2 \) and using \(\boldsymbol{s}^2 / n\) as an estimate of the \gls{MCMC} error of \(\bar{\boldTheta}\)
+would very likely be an underestimate due to the positive auto-correlation in the samples.
+
+Numerous methods for calculating \gls{MCMC} error are discussed in \cite{kass1998}, including using thinned chains
+(which is deemed sub-optimal). Neal suggests (and further explains in \cite{neal1993}) the calculation of an
+\textit{effective sample size}, \(n_{eff}\), which accounts for the positive auto-correlation within the samples:
+\begin{align} 
+n_{eff} = \frac{n}{1 + 2 \sum_{k=1}^\infty acf(k)}
+\end{align}
+where \(acf(k)\) is the estimated auto-correlation at lag \(k\). The sum must then be truncated at some reasonable value
+and \gls{MCMC} error estimates may be based on \(\boldsymbol{s}^2 / n_{eff}\). Calculation of \(n_{eff}\) may also be
+useful in order to gain an idea how many samples, \(n\), to take. Other methods like \textit{non-overlapping batch
+means} are described in \cite{geyer2011}.
+
+Throughout this thesis we only burn samples if we are unsure of the validity of the chain starting points, and no
+thinning is used.
+
+Formal diagnostics are available for checking the convergence of \gls{MCMC} algorithms. The most popular of these are
+the Gelman-Rubin diagnostics (see \cite{gelman1992, brooks1998}) which involve running multiple chains from
+over-dispersed starting points and comparing the between chain and within chain variability, and the Geweke diagnostic
+(see \cite{geweke1991}), which produces z-scores by comparing the means of the first 10\% and last 50\% (by default for
+most computer packages) of samples.
+
+\section{RJMCMC}
+\label{sec:RJMCMC_overview}
+
+\gls{RJMCMC} is a framework in which reversible Markov chain samplers are able to `jump' between parameter state spaces
+of differing dimensionality. The \gls{RJMCMC} algorithm was first described in \cite{green1995} and is an extension of
+the \gls{MH} algorithm. It has since been used to tackle numerous problems, mainly concerning Bayesian model choice, for
+example in \cite{hastie2012, punska1999}, but may also be used for data imputation. For example if we are
+concerned with modelling goal times in association football, and obtain data which records goal times for several
+matches, but also data which only records the match outcome (home team win, draw, or away team win) for several matches,
+we could use \gls{RJMCMC} methods to impute a varying dimension vector of goal times for the matches for which goal
+times were not recorded. For an example of the use of \gls{RJMCMC} to impute unobserved data, see \cite{gibson1998}.
+
+\gls{RJMCMC} allows the \gls{MCMC} routine to explore different models \(m\), each with their own parameter space
+\(\boldTheta_m\) and aims to generate samples from the posterior distribution \(p(m, \boldTheta_m | \data)\). The
+dimension of \(\boldTheta_m\), \(dim(\boldTheta_m)\), need not be the same for each \(m\). An outline of the algorithm
+for a between-models move is as follows: 
+
+Let the current state of the chain be \((m, \boldTheta_m)\), then with a user-specified model proposal density \(j(m' |
+m)\), parameter proposal density \(q(\boldMu | \boldTheta_m, m, m')\), and invertible parameter transformation function
+\(g_{m, m'}(\boldTheta_m, \boldMu)\):
+\begin{enumerate} 
+  \item Sample the proposal model \(m'\) from \(j(m' | m)\)
+  \item Sample \(\boldMu\) from \(q(\boldMu | \boldTheta_m, m, m')\)
+  \item Set \((\boldTheta'_{m'}, \boldMu') = g_{m, m'}(\boldTheta_m, \boldMu)\)
+  \item With probability \(\alpha\), set the new state of the chain to \((m', \boldTheta'_{m'})\)
+\end{enumerate}
+Here, the acceptance probability is given by:
+\begin{align} 
+\alpha = \min\left(1, 
+\frac{p(\data | \boldTheta')}{p(\data | \boldTheta)} \times 
+\frac{p(\boldTheta' | m')}{p(\boldTheta | m)} \times
+\frac{p(m')}{p(m)} \times 
+\frac{j(m | m')}{j(m' | m)} \times 
+\frac{q(\boldMu' | \boldTheta'_{m'}, m', m)}{q(\boldMu | \boldTheta_m, m, m')} \times 
+\left| \frac{\partial g_{m, m'}(\boldTheta_m, \boldMu)}{\partial (\boldTheta_m, \boldMu)} \right| 
+\right)
+\end{align}
+The algorithm is essentially the same as \gls{MH} but formulated to allow for sampling from a union of models with
+parameter spaces of differing dimension, and hence comments on the \gls{MH} algorithm are also applicable here.
+
+When moving across model spaces it is likely that there is a natural way to propose the new model parameters
+\(\boldTheta'_{m'}\) based on the current model parameters \(\boldTheta_m\) and the function \(g_{m, m'}(\boldTheta_m,
+\boldMu)\) should be chosen accordingly. The variates \(\boldMu\) and \(\boldMu'\) provide dimension matching between
+spaces such that \(dim(\boldTheta_m) + dim(\boldMu) = dim(\boldTheta'_{m'}) + dim(\boldMu')\) (note \(dim(\boldMu')\) or
+\(dim(\boldMu)\) can be 0), a necessary condition for the Jacobian term to always be calculable, while the Jacobian term
+appears in \(\alpha\) to account for the deterministic transformation of the parameter space when switching models.
+Typically when proposing a move from model \(m\) to model \(m'\) where \(m\) is nested in \(m'\), \(\mu\) when passed
+into \(g_{m, m'}(\boldTheta_m, \boldMu)\) will be transformed (or given directly) into the additional parameters in
+\(\boldTheta'_{m'}\) and \(dim(\boldMu') = 0\). Oppositely, when proposing a move from model \(m\) to model \(m'\) where
+\(m'\) is nested in \(m\), that is, the removal of parameters, \(dim(\boldMu) = 0\) and \(\boldMu'\) will account for
+the removed parameters.
+
+Furthermore, often the Jacobian term will be 1 (which it is in a standard \gls{MH} procedure) for example when all the
+parameters of the proposed model are generated directly from the proposal distribution (essentially an independence
+sampler). A detailed example of an implementation of \gls{RJMCMC} is shown in Chapter \ref{ch:A_Utility_Based_Model}
+Section \ref{sec:Model_inference_using_RJMCMC}. For an example of when the Jacobian term is not equal to 1; see the
+`Poisson versus negative binomial' section in \cite{hastie2012}.
+
+\section{Particle filtering methods}
+\label{sec:Particle_filtering_methods_intro}
+
+Particle filtering methods have been applied in a wide range of fields such as robotics (\cite{montemerlo2002,
+rekleitis2004}), navigation (\cite{gustafsson2002}), and image processing (\cite{nummiaro2003}), where they are used to
+quickly update a posterior belief around a dynamic system as new data arrives throughout time. The particle filter does
+not limit the dynamic system to be linear or for the system and observational noise to be Gaussian (for which the Kalman
+filter (\cite{kalman1960}) is a popular approach). In addition, particle filtering methods can be surprisingly
+straightforward to implement. Practically, the implementation of a particle filter can readily take advantage of
+parallel processing which is not always straightforward in most \gls{MCMC} methods (for example in \gls{MH}).
+
+The methods are typically used for what is known as \textit{on-line learning}, that is, updating of posterior belief as
+data arrive sequentially through time. This differs the more common case of \textit{off-line learning} where the data
+are fixed. For example, updating posterior belief regarding model parameters every few seconds of an association
+football match would clearly constitute on-line learning, and would naturally require computationally fast methods to be
+useful. Inferring model parameters for a fixed amount of past data would be off-line learning, and is typically not be
+so time restricted.
+
+Also known as \gls{SIR} or \gls{SMC} (\cite{Sanjeev2002}), particle filtering methods have been designed for filtering
+of hidden Markov models. That is, at each time \(t\) we sequentially observe data \(\boldy_t\) and wish to infer the
+distribution of the unobserved (hidden) underlying Markov process \(\boldx_t\) where \(\boldy_t\) is observed with
+noise, for example \(\boldy_t = f(\boldx_t) + \boldsymbol{\epsilon}_t\). The posterior distribution of the hidden state
+is thus \(p(\boldx_t | \data_t)\) where \(\data_t = \{\data_{t-1}, \boldy_t\}\) (the total data observed up to time
+\(t\)).
+
+While not used in this thesis, it should also be noted that these methods may be used to sample from a target
+distribution \(p(\boldx | \data)\) in non-sequential problems. For example if \(p(\boldx | \data)\) is highly
+multi-modal and difficult to sample from, it may be beneficial to begin sampling from an easy-to-sample distribution and
+move the sample through an artificial sequence of distributions which ultimately ends with \(p(\boldx | \data)\). The
+idea is that at each time step, the sample distribution approaches closer to the target distribution \(p(\boldx |
+\data)\). Such methods have been discussed by \cite{neal2001, chopin2002, del2006} and in some cases outperform
+traditional \gls{MCMC} methods. For example \cite{del2006} considers the artificial sequence of distributions:
+\begin{align} 
+p_t(\boldx | \data) \propto p(\data | \boldx)^{\phi_t} p(\boldx)
+\end{align}
+where \(0 \leq \phi_1 < \ldots < \phi_T = 1\). At \(t = 1\) the sample is very close to a sample from the prior (or
+exactly if \(\phi_1 = 0\)), and at each time point \(t\), the distribution of the samples moves closer to the target
+distribution, a sample from the target distribution is ultimately obtained at \(t = T\).
+
+We now discuss the underlying ideas of the particle filtering algorithm. Suppose we have a size \(n\) sample from the
+posterior distribution \(p(\boldx_t | \data_t)\) at time \(t\). The sample is defined by a set of points
+\(\{\boldx_t^{(1)}, \ldots, \boldx_t^{(n)}\}\) with corresponding importance weights \(\{\omega_t^{(1)}, \ldots,
+\omega_t^{(n)}\}\) and will be denoted as \(\boldP_t\), the particle approximation of \(p(\boldx_t | \data_t)\). In the
+case where all the weights are equal (\(\omega_t^{(i)} = 1/n\) for all \(i\)), \(\boldP_t\) is a direct Monte Carlo
+sample - as will be the case for the methods described in this thesis.
+
+We assume that the model transition density of the dynamic parameter \(\boldx_t\) is available and is
+\(p(\boldx_{t+1} | \boldx_t)\). We further assume the likelihood function for the data observed at time \(t\),
+\(\boldy_t\), is available and is \(p(\boldy_t | \boldx_t)\).
+
+After obtaining data \(\boldy_{t+1}\) we wish to sample from the posterior distribution \(p(\boldx_{t+1} |
+\data_{t+1})\). Using Bayes rule:
+\begin{align}
+p(\boldx_{t+1} | \data_{t+1}) 
+& \propto p(\boldy_{t+1} | \boldx_{t+1}) p(\boldx_{t+1} | \data_t) \notag \\
+& = p(\boldy_{t+1} | \boldx_{t+1}) \int_{-\infty}^\infty p(\boldx_{t+1} | \boldx_t) p(\boldx_t | \data_t) d \boldx_t
+\label{eq:bayesTheorem}
+\end{align}
+where \(p(\boldx_{t+1} | \data_t)\) is the prior density of \(\boldx_{t+1}\) at time \(t\). At time \(t = 0\), a
+known prior \(p(\boldx_1 | \data_0) = p(\boldx_1)\) is used. Now, we have our discrete particle representation
+of \(p(\boldx_t | \data_t)\), \(\boldP_t\), and so the integral in Equation \eqref{eq:bayesTheorem} is replaced with
+a weighted summation where each particle \(i\) is sampled from the transition density, \(p(\boldx_{t+1} |
+\boldx_t^{(i)})\). The posterior distribution \(p(\boldx_{t+1} | \data_{t+1})\) is then approximated by:
+\begin{align}
+\hat{p}(\boldx_{t+1} | \data_{t+1}) \propto 
+p(\boldy_{t+1} | \boldx_{t+1}) \sum_{i=1}^n \omega_t^{(i)} p(\boldx_{t+1} | \boldx_t^{(i)}).
+\label{posteriorApproximation}
+\end{align}
+So in theory a set of particles \(\boldP_t\), should be able to represent a posterior distribution throughout time \(t\)
+with some movement in the particles, followed by a weighting step based on the likelihood of the data at that point. We
+continue the discussion of particle filtering methods in Chapter
+\ref{ch:Fast_updating_of_dynamic_and_static_parameters_using_particle_filters} where we apply them to estimate
+parameters in the models we develop.
+
+\section{Bayesian model choice}
+\label{sec:Bayesian_model_choice}
+
+In a Bayesian framework it is only natural to represent all uncertainty by probability distributions. Typically this is
+done by displaying the belief of a parameter by its posterior distribution, but can also extend to posterior
+probabilities for a collection of models. The discussion paper by \cite{draper1995} promotes consideration of model
+uncertainty, as opposed to finding the `best' model from a collection of competing models and basing all inference on
+that single model, which may lead to over-confidence in uncertainty of predictions.
+
+For a collection of models \(m_1, \ldots, m_K\), the posterior probability of model \(m_k\) is:
+\begin{align} 
+\label{eq:posteriorModelProb}
+p(m_k | \data) = \frac{p(m_k) p(\data | m_k)}{\sum_{i=1}^K p(m_i) p(\data | m_i)}
+\end{align}
+where \(p(m_k)\) is the prior model probability of model \(m_k\) and:
+\begin{align}
+\label{eq:marginalLikelihood}
+p(\data | m_k) = \int p(\data | m_k, \boldTheta_k) p(\boldTheta_k | m_k) \, \mathrm{d}\boldTheta_k
+\end{align}
+where \(\boldTheta_k\) is the parameter vector for model \(m_k\), \(p(\boldTheta_k | m_k)\) is the prior density of
+\(\boldTheta_k\) under model \(m_k\) and \(p(\data | m_k, \boldTheta_k)\) is the likelihood function. That is, \(p(\data
+| m_k)\) is the marginal likelihood for model \(m_k\) obtained by integrating the likelihood function with respect to
+the prior distribution of the parameters. 
+
+In practice the integration in Equation \eqref{eq:marginalLikelihood} is often not analytically tractable and thus
+approximations are needed, for example the methods described in \cite{chib2001}. We note that the method of
+approximating the marginal likelihood by computing the harmonic mean of the likelihood with respect to posterior samples
+is generally frowned upon by the statistical community, and was even branded as `The Harmonic Mean of the Likelihood:
+Worst Monte Carlo Method Ever' (\cite{radford2008}). In addition, the posterior model probabilities are by construction
+quite sensitive to the choice of prior \(p(\boldTheta_k | m_k)\).
+
+Model choice could be based on the posterior model probabilities by simply choosing model \(m_k\) with the highest
+\(p(m_k | \data)\). However, in a Bayesian framework it is not necessary to limit ourselves to only one model (which may
+even have a posterior probability of being the true model much less than 1) and hence Bayesian model averaging can be
+used.
+
+\subsection{Bayesian model averaging}
+\label{sec:Bayesian_model_averaging}
+
+In order to perform inference or make predictions using a combination/ensemble of models, one may use a method such as
+\textit{Bayesian model averaging}. The basic concept is to calculate a weighted average of the output from each model,
+where the weights are the posterior model probabilities.
+
+If a quantity of interest is \(\Delta\) which models \(m_1, \ldots, m_K\) aim to shed light on (such as the outcome of
+an association football match, or a particular parameter common to all models), then the posterior distribution of
+\(\Delta\) using Bayesian model averaging is:
+\begin{align} 
+p(\Delta | \data) = \sum_{i=1}^{K} p(\Delta | m_i, \data) p(m_i | \data).
+\end{align}
+It has been suggested by \cite{hoeting1999, madigan1994} that averaging over all models in this fashion provides a
+better average predictive ability than any single model. An example of Bayesian model averaging can be found in Chapter
+\ref{ch:A_Utility_Based_Model} Section \ref{sec:Model_inference_using_RJMCMC} which uses \gls{RJMCMC} to sample
+posterior model probabilities from a large collection of models in order to estimate a particular utility function.
+
+\subsection{The Bayes factor}
+\label{sec:Bayes_factor}
+
+The actual values of posterior model probabilities can however be somewhat misleading. They do not necessarily imply the
+probability that a particular model is the true model, but the probability of one model in relation to another. For
+example when the number of models under consideration increases, under a uniform prior on the models, the posterior
+model probability of any given model will decrease. Thus, it is intuitive to consider ratios of evidence in favour of
+models, known as the Bayes factor, which do not change with the number of models under consideration.
+
+The Bayes factor  appeared in 1939 in the first text to develop a fundamental theory of scientific inference based on
+Bayesian statistics, \textit{Theory of Probability} (see \cite{jeffreys1939}). The Bayes factor for comparison of models
+\(m_1\) and \(m_2\) is:
+\begin{align}
+BF_{1, 2} = \frac{p(\data | m_1)}{p(\data | m_2)}
+\end{align}
+where \(p(\data | m_1)\) and \(p(\data | m_2)\) are calculated as in Equation \eqref{eq:marginalLikelihood}. The Bayes
+factor is thus linked to the ratio of posterior model probabilities via:
+\begin{align}
+\frac{p(m_1 | \data)}{p(m_2 | \data)} = BF_{1, 2} \times \frac{p(m_1)}{p(m_2)}.
+\end{align}
+Literature often cites (somewhat arbitrary) tables which show how much evidence the Bayes factor provides in favour of
+model \(m_1\) against model \(m_2\), the most popular being by \cite{kass1995} which is shown in Table \ref{tab:bayesFactor}.
+\begin{table}
+\centering
+\fbox{
+\begin{tabular}{ll}
+\(B_{x, y}\) & Interpretation \\
+\hline
+1 to 3 		  & Not worth more than a bare mention \\
+3 to 20 	  & Positive \\
+20 to 150 	  & Strong \\
+\(>150\)      & Very strong
+\end{tabular}
+}
+\caption{\label{tab:bayesFactor} An interpretation of Bayes factors from \cite{kass1995}}
+\end{table}
+
+\subsection{The Jeffreys-Lindley paradox}
+\label{sec:Jeffreys_Lindley_paradox}
+
+There are however inherent problems with the above methods which use posterior model probabilities. Typically, the
+marginal likelihood (Equation \eqref{eq:marginalLikelihood}) is very sensitive to the choice of prior distribution
+\(p(\boldTheta_k | m_k)\). Choosing a very non-informative prior (which is often used in Bayesian analysis) can mean
+that when comparing two nested models the Bayes factor may favour the more parsimonious model even when a classical
+hypothesis test clearly rejects it. This clear contradiction is often referred to as the \textit{Jeffreys-Lindley
+paradox} after \cite{lindley1957} further discussed the paradox based on findings in \cite{jeffreys1939}. The intuition
+behind the paradox is that even though a more complex model may have a much higher posterior mode, it is likely very
+peaked, and the additional dimensionality means that the integration (seen in Equation \eqref{eq:marginalLikelihood}) of
+the likelihood with respect to the prior spans over a larger range of low density.
+
+The Jeffreys-Lindley paradox is probably best illustrated with an example (taken from \cite{wikiExample}).
+Consider a certain city where \(m' = 49,581\) males are born from a total of \(n = 98,451\) births. We assume the number
+of male births \(M\) is a binomial random variable such that \(M \sim Bin(n, p)\). We are interested in testing whether
+\(p\) is 0.5 or some other value. That is, we test the hypothesis \(H_0\): \(p = 0.5\) against \(H_1\): \(p \neq 0.5\).
+
+The classical approach to the hypothesis test is to calculate a p-value (in this case 2-sided), \(2 \times \Prob(M >
+m')\) assuming \(H_0\) is true. Using a Normal approximation the p-value is 0.0235, which usually allows for the
+rejection of \(H_0\) in favour of \(H_1\) (since the p-value is below the magic cut-off value, 0.05).
+
+The Bayesian approach is to compute the posterior probabilities of \(H_0\) and \(H_1\). We assign equal prior
+probabilities, \(\Prob(H_0) = \Prob(H_1) = 0.5\), and then calculate the posterior model probabilities in a similar fashion
+to as described in Equation \eqref{eq:posteriorModelProb}:
+\begin{align} 
+\Prob(H_0 | m') = \frac{\Prob(m' | H_0)}{\Prob(m' | H_0) + \Prob(m' | H_1)}.
+\end{align}
+\(\Prob(m' | H_0)\) simply refers to the probability of observing \(M_0 = m'\) where \(M_0 \sim Bin(n, 0.5)\) (determined
+by \(H_0\)) and \(\Prob(m' | H_1)\) is the probability of observing \(M_1 = m'\) where \(M_1 \sim Bin(n, p_1)\) and
+\(p_1 \sim U(0, 1)\) (determined by \(H_1\)). Therefore \(\Prob(m' | H_0) = 0.0001951\) and:
+\begin{align} 
+\Prob(m' | H_1) &= \int_0^1 \binom{n}{m'} p^{m'} (1 - p)^{n - m'} \, \mathrm{d}p \notag \\
+			&= \binom{n}{m'} B(m' + 1, n - m' + 1) \notag \\
+			&= 0.00001016
+\end{align}
+by rearranging the terms in the integral into a beta \gls{PDF} which integrates to 1 and calculating the beta function
+\(B\) and binomial coefficient on a log scale (to prevent numerical issues). The posterior probabilities are thus
+\(\Prob(H_0 | m') = 0.9505\) and \(\Prob(H_1 | m') = 0.04948\). Which is strongly in favour of \(H_0\).
+
+The root of the disagreement in the two methods is that the classical test looks for evidence against \(H_0\) without
+making any real reference to \(H_1\), whereas the Bayesian test directly compares \(H_0\) and \(H_1\).
+The tests do not \textit{exactly} contradict, either, one says there is evidence against \(p = 0.5\), the other tells
+that \(p = 0.5\) explains the data better than \(p \sim U(0, 1)\).
+
+In this thesis we mainly consider Bayesian methods and the above example warns us of the problems of Jeffreys-Lindley
+paradox when comparing models with posterior model probabilities. The prior of \(p\) under \(H_0\) is very informative,
+\(p=0.5\), and under \(H_1\) it is very vague, \(p \sim U(0, 1)\). Although \(H_1\) contains the \gls{MLE} \(\hat{p} =
+m'/n = 0.5036\), it largely contains values of \(p\) which are not in anyway consistent with the data, for example \(p <
+0.4\) or \(p > 0.6\), and hence it is rejected. The same ideas apply to a more complex model having a higher dimension
+of parameter space and thus scope to contain the best model for explaining the data, but also scope for more space of
+low posterior probability, in particular when vague priors are used. As is stated in \cite{robert2014} one of the main
+problems with the paradox is that it persists even when the sample size grows to infinity, and is hence why it is still
+a topic of discussion amongst statisticians, for example in the aptly named `Who should be afraid of the
+Jeffreys-Lindley paradox?' \cite{spanos2013}.
+
+\subsection{The Deviance information criterion}
+\label{sec:Deviance information criterion}
+
+The \gls{DIC} was first proposed by \cite{spiegelhalter2002} in a lengthy discussion paper and is often used as a model
+comparison measure in Bayesian analysis. It is simple to calculate and is a readily available statistic from the widely
+used program WinBUGS (\cite{WinBUGS}), which may have aided in its popularity. Methods like \gls{DIC} have been
+proposed due to a desire for model comparison techniques which are not sensitive to the choice of prior distribution or
+potentially susceptible to the Jeffreys-Lindley paradox (like many methods which make use of the marginal likelihood,
+for example the Bayes factor). In a similar vein was the proposal of the \textit{posterior Bayes factor} in a discussion
+paper by \cite{aitkin1991} which (unfortunately for the author) was not so well received by the statistical community.
+For example in the discussion Lindley states `the method of posterior Bayes factors is seriously flawed and cannot be
+recommended'.
+
+In a Bayesian framework it can often be difficult to calculate the effective number of parameters in a model. For
+example when there are several levels of parameterisation in a hierarchical model. \cite{spiegelhalter2002} provide a
+method for determining the effective number of model parameters, which they define as:
+\begin{align} 
+p_D = \overline{D(\boldTheta)} - D(\overline{\boldTheta})
+\end{align}
+where:
+\begin{align}
+D(\boldTheta) = -2 \log(p(\data | \boldTheta)) + 2 \log(f(\data)).
+\end{align}
+\(D(\boldTheta)\) is termed as the `Bayesian Deviance' which depends on the log-likelihood of the data \(\data\) for
+parameter \(\boldTheta\), that is, \(\log(p(\data | \boldTheta))\), and a standardising term, \(2 \log(f(\data))\),
+where \(f(\data)\) is the likelihood of the data under a saturated model. The \gls{DIC} (\cite{spiegelhalter2002}) is
+then proposed as:
+\begin{align} 
+DIC = D(\overline{\boldTheta}) + 2 p_D
+\end{align}
+that is, a Bayesian measure of model fit, \(D(\overline{\boldTheta})\), penalised by a measure of model
+complexity, \(p_D\).
+
+% , for example in the case of a model from the
+% exponential family, \(f(\data) = p(\data | \forall y \in \data : \E(y) = y)\)
+
+When using \gls{DIC} for model comparison purposes (as we do in Chapter \ref{ch:A_Utility_Based_Model} Section
+\ref{sec:Model_choice_using_DIC}) it is sufficient to use \(2 \log(f(\data)) = 0\), since this term will be identical
+(and thus cancel) over models. \gls{DIC} is analogous to other model selection information criteria (for example
+\gls{AIC} or \gls{BIC}, see \cite{burnham2004}) in that it considers a measure of fit to the data, and a measure of
+model complexity. In a similar fashion, smaller values of \gls{DIC} correspond to a preferable model. In addition, for
+models using negligible prior information, \gls{DIC} is approximately equivalent to \gls{AIC}
+(\cite{spiegelhalter2002}).
+
+In practice, for model comparisons, \(\overline{D(\boldTheta)}\) is calculated by storing the value of \(\log(p(\data |
+\boldTheta_i))\) for each sample \(i = 1, \ldots, n\) taken in the \gls{MCMC} procedure. Then the estimate is:
+\begin{align} 
+\overline{D(\boldTheta)} = \frac{-2}{n} \sum_{i=1}^{n} \log(p(\data | \boldTheta_i)).
+\end{align}
+Similarly, \(D(\overline{\boldTheta}) = -2 \log(p(\data | \overline{\boldTheta}))\) where \(\overline{\boldTheta}\) is
+the posterior sample mean. An example of model choice based on \gls{DIC} is shown in Chapter
+\ref{ch:A_Utility_Based_Model} Section \ref{sec:Model_choice_using_DIC}.
+
+\subsection{The posterior predictive distribution and scoring rules}
+
+In this thesis we are naturally concerned with the one-week-ahead forecasting abilities of our chosen models. It is thus
+only sensible to evaluate models based on how accurately they are able to forecast results. Given a posterior distribution
+\(p(\boldTheta | \data)\) and a random variable of interest \(\Delta\), the posterior predictive distribution of
+\(\Delta\) has probability function:
+\begin{align} 
+\label{eq:posteriorPred}
+p(\Delta | \data) = \int p(\Delta | \boldTheta) p(\boldTheta | \data) \, \mathrm{d}\boldTheta
+\end{align}
+which provides an indication of the uncertainty in the prediction of \(\Delta\) via the uncertainty present in
+\(p(\boldTheta | \data)\). Equation \eqref{eq:posteriorPred} shows the expectation of \(p(\Delta | \boldTheta)\) with
+respect to the posterior \(p(\boldTheta | \data)\), and so we may approximate \(p(\Delta | \data)\) with:
+% \begin{align}
+% \E_{\boldTheta | \data}(p(\Delta | \boldTheta))
+% &= \int p(\Delta | \boldTheta) p(\boldTheta | \data)\, \mathrm{d}\boldTheta \notag\\
+% &\approx \frac{1}{n} \sum_{i=1}^{n} p(\Delta | \boldTheta_i) \notag\\
+% &= \hat{p}(\Delta | \data)
+% \end{align}
+% with \(f(\boldTheta) = p(\Delta | \boldTheta)\) and by noting that \(f(\boldTheta | \data) = p(\Delta | \boldTheta,
+% \data) = p(\Delta | \boldTheta)\), that is, given the posterior distribution of the model parameters \(\boldTheta\), the
+% prediction of \(\Delta\) does not depend on the data \(\data\).
+\begin{align} 
+\hat{p}(\Delta | \data) = \frac{1}{n} \sum_{i=1}^{n} p(\Delta | \boldTheta_i)
+\end{align}
+following from the methodology presented in Equation \eqref{eq:MCapprox}.
+
+If we consider the weekly arrival of data and denote \(\data_w\) to be the data collected up to week \(w\), then we may
+calculate the one-week-ahead posterior predictive distribution \(\hat{p}(\Delta_{w, i} | \data_{w-1})\) where
+\(\Delta_{w, i}\) is a random variable which denotes the outcome of event \(i\) in week \(w\). This implies use of the
+week \(w-1\) posterior distribution, \(p(\boldTheta | \data_{w-1})\).
+
+We make use of \(\hat{p}(\Delta_{w, i} | \data_{w-1})\) in Chapters
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} and
+\ref{ch:Fast_updating_of_dynamic_and_static_parameters_using_particle_filters} in order to calculate a \textit{scoring
+rule}. A scoring rule is described by \cite{dawid2012} as a function measuring the quality of a quoted probability
+distribution \(Q\) for a random variable \(\Delta\), in the light of the realised outcome \(O\) of \(\Delta\). For
+example if we consider a random variable which denotes the end of match result in association football (a home team win,
+a draw, or an away team win), the scoring rule measures the quality of our prediction of the result based on the
+observed result. Furthermore, a scoring rule is known as \textit{strictly proper} if it is uniquely optimised when \(Q\)
+is the true probability distribution of \(\Delta\).
+
+We make use of the strictly proper \textit{logarithmic scoring rule} which we calculate as:
+\begin{align}
+LSR_w = \sum_{i=1}^{n_w} \log(\hat{\Prob}(O_{w, i} | \data_{w-1}))
+\end{align}
+where \(n_w\) is the number of considered events in week \(w\) and \(O_{w, i}\) is the observed outcome of the random
+variable \(\Delta_{w, i}\) in week \(w\). Larger values of \(LSR_w\) then imply high quoted probabilities for the events
+which were actually realised in week \(w\), an indication of how well a model's probabilities forecast the observed
+outcomes when using the data up to and including week \(w-1\). Furthermore, we may consider \(\sum_w LSR_w\) as an
+indication of the forecasting ability throughout all weeks \(w\) (\cite{gneiting2007}).
+
+One common method for model assessment and selection is \textit{cross-validation} (an excellent reference is
+\cite{hastie2009}) where model parameters are inferred using a partition of the available data (training data) and then
+performance is tested on the remaining partition of data (testing data). The process is typically repeated \(k\) times
+(and the resulting method \textit{k-fold-cross-validation}) so that \(k\) non-overlapping testing data partitions
+comprise the entire data, and the results are averaged. That is, all the data has been used for testing. The idea of
+methods like cross-validation is to assess how well a model generalises to unseen observations.
+
+Calculation of \(LSR_w\) is somewhat similar to cross-validation methods in that the model parameters are inferred on a
+particular partition of the data and then model performance is assessed on the remaining data. The method proposed for
+calculation of \(LSR_w\) however respects the sequential nature in which the data we consider in this thesis arrives,
+and so it is a performance metric which we use for the tuning of model parameters and model selection.
+
+We also note that the approximation of the posterior predictive distribution, \(\hat{p}(\Delta | \data)\), may be used
+for what is known as \textit{posterior predictive checks}. The notion is to `check' where an observed outcome \(O\) of
+\(\Delta\) sits within the distribution \(\hat{p}(\Delta | \data)\), which in turn suggests the \textit{posterior
+predictive p-value} (see \cite{meng1994, gelman2013}). Again, we are naturally concerned with forecasting ability of
+models, since this has a direct relation to bookmakers odds, and so we prefer to evaluate models based on a metric like
+\(\sum_w LSR_w\). We do however consider a posterior predictive check in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:Goodness_of_fit}. These checks are typically useful to understand where the model is not fitting the data and
+thus offer insight as to how a model may be improved.
+
+

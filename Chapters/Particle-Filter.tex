@@ -1,0 +1,1046 @@
+
+\singlespacing
+
+\chapter{Fast updating of dynamic and static parameters using particle filters}
+\label{ch:Fast_updating_of_dynamic_and_static_parameters_using_particle_filters}
+
+\onehalfspacing
+
+\section{Introduction} 
+
+In the domain of sports modelling, several authors have suggested benefits in allowing parameters related to team
+strength to follow a dynamic system whereby the parameters are assumed to evolve throughout time. \cite{Owen2011}
+presented a dynamic generalised linear model which allowed parameters representing each team's attacking and defensive
+strengths to follow a random walk through time, and found that the dynamic model performed better than its non-dynamic
+counterpart when compared on forecasting ability. \cite{koopman2015} modelled the team related parameters as an
+auto-regressive process and again suggested increased forecasting power when comparing their model with the time
+invariant version. Several Bradley-Terry type models with an added dynamic component have also been presented in the
+literate. For example \cite{FahrmeirTutz1994} considered models which contained the team ability parameter following a
+first-order, second-order, and local linear trend, with parameter inference via empirical Bayes. \cite{KnorrHeld2000}
+allowed the team ability parameter to follow a Gaussian first-order random walk, with parameter inference via the
+extended Kalman filter (see, for example, \cite{einicke2012}). Finally, \cite{CattelanVarinFirth2013} proposed modelling
+the team abilities via an exponentially weighted moving average and performed inference via a two step maximisation of
+the likelihood.
+ 
+Here we apply methods described in \cite{liu2001} which update parameter beliefs regarding dynamic and non-dynamic
+(static) parameters as new data arrive. We aim to show that particle filtering methods are computationally fast,
+accurate, are not limited by assumptions of normality or linearity, and can be straightforward to implement. Moreover,
+we discuss whether particle filtering methods and the additional dynamic model component perform better than the static
+model with inference in a more traditional \gls{MCMC} framework when comparisons are based on one-week-ahead predictive
+ability. In addition, we propose that the computational speed of the particle filtering methods may allow for in-play
+updating of parameter estimates, so one could for example use the most up-to-date posterior distributions to inform
+in-play betting strategies.
+
+The chapter is organised as follows: Section \ref{sec:Particle_filtering_methods} presents a number of particle
+filtering algorithms and discusses their practical implementation. Section
+\ref{sec:A_mixture_of_dynamic_and_static_parameters} describes how the particle filtering algorithms can be modified in
+order to deal with the inference of dynamic and static model parameters. Section \ref{sec:An_updated_model} presents a
+modification to our non-homogeneous Poisson process model presented in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section \ref{model}
+which allows the team resource parameters to follow a dynamic system throughout a season, and deals with the inference
+of all model parameters. Lastly, concluding remarks are presented in Section \ref{sec:Concluding_remarks_particle}.
+
+\section{Particle filtering methods}
+\label{sec:Particle_filtering_methods}
+
+We firstly reiterate some of the theory and notation that was introduced in Chapter
+\ref{ch:Bayesian_computational_methods} Section \ref{sec:Particle_filtering_methods_intro}. The aim of particle
+filtering methods is to quickly update the posterior belief of a dynamic model parameter \(\boldx_t\) (which we assume
+to be Markovian) as data \(\boldy_t\) is observed sequentially at each time point \(t\) with \(\data_t = \{\data_{t-1},
+\boldy_t\}\) denoting the entire data observed up to time \(t\). The methods assume a known model transition density
+\(p(\boldx_{t+1} | \boldx_t)\) and likelihood function \(p(\boldy_t | \boldx_t)\).
+
+\subsection{The bootstrap filter}
+
+A simple but effective first algorithm is the \textit{bootstrap filter} proposed by \cite{Gordon1993}, which implements
+the theory discussed in Chapter \ref{ch:Bayesian_computational_methods} Section \ref{sec:Particle_filtering_methods_intro}.
+Suppose at time \(t\) we have a set of equally weighted samples \(\{\boldx_t^{(1)}, \ldots, \boldx_t^{(n)}\}\) which are
+approximately distributed as the posterior distribution \(p(\boldx_t | \data_t)\), the bootstrap filter is an algorithm
+for propagating and updating these samples in order to obtain a new set of equally weighted samples which are
+approximately distributed as \(p(\boldx_{t+1} | \data_{t+1})\). The algorithm consists of three steps:
+\begin{enumerate} 
+  \item \textit{Prediction}. The samples are used to generate an approximation of the time \(t+1\) prior,
+  \(p(\boldx_{t+1} | \data_t)\). That is, a new set of samples \(\{\boldx_{t+1}^{(1), *}, \ldots,
+  \boldx_{t+1}^{(n), *}\}\) are drawn from the model transition densities \(p(\boldx_{t+1} | \boldx_t^{(i)})\)
+  \item \textit{Update}. The data at time \(t+1\), \(\boldy_{t+1}\), is used to give each prior sample \(i\) a
+  normalised weight:
+  \begin{align}
+  \omega^{(i)} = \frac{p(\boldy_{t+1} | \boldx_{t+1}^{(i), *})}{\sum_{j = 1}^n p(\boldy_{t+1} | \boldx_{t+1}^{(j),
+  *})}
+  \end{align}
+  \item \textit{Resampling}. Sample with replacement \(n\) times from \(\{\boldx_{t+1}^{(1),
+  *}, \ldots, \boldx_{t+1}^{(n), *}\}\) with probability \(\omega^{(i)}\) of picking \(\boldx_{t+1}^{(i), *}\). The
+  new sample \(\{\boldx_{t+1}^{(1)}, \ldots, \boldx_{t+1}^{(n)}\}\) has approximate
+  distribution \(p(\boldx_{t+1} | \data_{t+1})\)
+\end{enumerate}
+The algorithm is initialised at time \(t = 0\) by drawing samples from the known prior \(p(\boldx_1 | \data_0) =
+p(\boldx_1)\). These samples feed directly into the \textit{update} stage of the filter.
+
+After the \textit{resampling} stage of the filter, particles with larger relative weights will be replicated and
+particles with smaller weights will be discarded. It is the resampling step which distinguishes the bootstrap filter
+from a \gls{SIS} scheme as it implies repeated applications of the importance sampling and resampling steps. Particle
+filtering algorithms like the bootstrap filter are thus known as \gls{SIR} schemes. The \gls{SIS} scheme updates the
+weights \(w_t^{(i)}\) at each time point \(t\) (with no resampling) and typically suffers from a problem known as
+\textit{particle degeneracy} where only a small proportion of the particles contain nearly all of the weight, see
+\cite{cappe2007} for an overview on particle degeneracy and the \gls{SIS} scheme.
+
+The resampling step described by \cite{Gordon1993} is a simple multinomial sampling procedure. There are however
+resampling strategies with smaller variance such as residual resampling, stratified resampling and systematic resampling
+(see \cite{Carpenter1999, Douc2005}). A discussion of residual resampling is in Section \ref{sec:Resampling_methods}.
+
+\subsection{General particle filter}
+
+The more general particle filter can propagate particles with importance (or umbrella) function \(q(\boldx_{t+1} |
+\boldx_t, \boldy_{t+1})\) as opposed to using the model transition density \(p(\boldx_{t+1} | \boldx_t)\).
+This may mean that particles can more adequately move around the space we wish to explore. There is also potential
+benefit from using an adapted particle filter where the importance density uses the newly arrived data \(\boldy_{t+1}\)
+(see the `likelihood filter' in \cite{Sanjeev2002}). The weights given to each particle \(i\) in the \textit{update}
+stage of the bootstrap filter are modified to:
+\begin{align}
+\overline{\omega}^{(i)} &= 
+\frac{p(\boldy_{t+1} | \boldx_{t+1}^{(i)}) p(\boldx_{t+1}^{(i)} | \boldx_t^{(i)})}
+{q(\boldx_{t+1}^{(i)} | \boldx_t^{(i)}, \boldy_{t+1})} \label{eq:generalFilter} \\
+\omega^{(i)} &= \frac{\overline{\omega}^{(i)}}{\sum_{j = 1}^n \overline{\omega}^{(j)}}
+\end{align}
+where \(\overline{\omega}^{(i)}\) are the un-normalised weights, so that \(\overline{\omega}^{(i)} \propto
+\omega^{(i)}\). We now consider the use of un-normalised weights, which can always be normalised by dividing each weight
+by the sum of the weights. If the importance function \(q(\boldx_{t+1} | \boldx_t, \boldy_{t+1}) = p(\boldx_{t+1} |
+\boldx_t)\) then the general particle filter reduces to the bootstrap filter.
+
+\cite{Pitt1999} describe two basic weaknesses of the particle filtering algorithm:
+\begin{enumerate}
+  \item When \(\boldy_{t+1}\) is an outlier, the weights \(\overline{w}^{(i)}\) will be very unevenly distributed and so
+  the algorithm will require a very large number of particles or a more efficient sampling process. This is of
+  particular concern when the likelihood is very peaked, that is, \(p(\boldy_{t+1} | \boldx_{t+1})\) is very sensitive
+  to \(\boldx_{t+1}\)
+  \item Due to the particle filter mixture approximation, the tails of \(p(\boldx_{t+1} | \data_t)\) may be poorly
+  approximated. This can lead to a poor approximation of \(p(\boldx_{x+1} | \data_{t+1})\) when an outlier is observed
+\end{enumerate}
+% \begin{enumerate}
+%   \item When an outlier is observed the weights will become unevenly distributed. There are then potential problems that
+%   		the particles will not adequately explore areas where the likelihood of the new (outlier) data points is high. This
+%   		is particularly a problem where the likelihood is very peaked ie \(p(\boldy_t | \boldx_t)\) is very sensitive to
+%   		\(\boldx_t\)
+%   \item The tail of \(p(\boldx_t | \data_t)\) can be poorly approximated by the particle representation
+%   \item Populating a \(d\)-dimensional space requires exponentially many particles in \(d\)
+% \end{enumerate}
+A solution to the first point is the \textit{auxiliary particle filter} which has an additional resampling stage which
+favours particles that are more likely to be consistent with the next data points and is explained in the following section. We
+also note the problem of selecting an adequate number of particles, as discussed by \cite{boers1999}. In order to
+alleviate these problems, we opt to run algorithms with a very high number of particles - 100,000.
+
+\subsection{Auxiliary particle filter}
+\label{sec:Auxiliary_particle_filter}
+
+Proposed by \cite{Pitt1999}, the idea of the auxiliary particle filter is to add an additional step to the
+general particle filtering method so that particle locations are typically more consistent with the likelihood of the
+new data \(\boldy_{t+1}\). Before propagation of the particles (moving them under the importance function), there is an
+additional resampling step, we assign the first-stage weights for particle \(i\) as:
+\begin{align}
+\overline{\omega}^{(i)}_1 = p(\boldy_{t+1} | \boldMu_{t+1}^{(i)})
+\label{eq:auxFilterFirstStage}
+\end{align}
+where \(\boldMu_{t+1}^{(i)}\) is some likely value that particle \(i\) will evolve to at time \(t+1\) such as the mean or
+the mode of \(p(\boldx_{t+1} | \boldx_t^{(i)})\). We then sample (with replacement) `auxiliary' indicators \(j\)
+with probabilities proportional to \(\overline{\omega}^{(i)}_1\). The particles are then propagated via sampling from
+the model transition density \(p(\boldx_{t+1} | \boldx_t^{(j)})\) (based on the auxiliary indicators \(j\)) and
+second-stage weights are:
+\begin{align}
+\overline{\omega}^{(j)}_2 = \frac{p(\boldy_{t+1} | \boldx_{t+1}^{(j)})}{p(\boldy_{t+1} |
+\boldMu_{t+1}^{(j)})}.
+\label{eq:auxFilterSecondStage}
+\end{align}
+After a second case of resampling based on the weights \(\overline{\omega}^{(j)}_2\), the particles form an
+equally weighted approximation to \(p(\boldx_{t+1} | \data_{t+1})\).
+
+\subsection{Practical implementation}
+
+In implementation of particle filters, weights are naturally stored on a log scale since calculating the likelihood is
+often not computationally feasible (its value can be numerically 0 when stored on a computer using double
+precision). An example of representing weights on the log scale for the general particle filter is as follows:
+\begin{align}
+\log(\overline{\omega}^{(j)}) = \log(p(\boldy_{t+1} | \boldx_{t+1}^{(j)})) + \log(p(\boldx_{t+1}^{(j)} |
+\boldx_t^{(j)})) - \log(q(\boldx_{t+1}^{(j)} | \boldx_t^{(j)})).
+\end{align}
+We then calculate \(m = \max(\log(\overline{\omega}^{(j)}))\) and calculate new un-normalised weights as:
+\begin{align}
+\hat{\omega}^{(j)} = e^{\log(\overline{w}^{(j)}) - m}
+\end{align}
+resampling can then be based on the new weights \(\hat{\omega}^{(i)}\). The largest weight now has a value of 1 and therefore
+it and other significant weights can be easily stored on a computer using double precision. Weights that are very small
+relative to the largest weight may be computationally 0 after we use the exponential function and will not be chosen in
+the resampling process.
+
+The propagation and weighting steps of the particle filtering algorithm are also good candidates to make use of parallel
+processing. We use the parallel processing library \texttt{OpenMp} (see \cite{openmp}) which very easily allows a
+programmer to write for loops which are executed in parallel. Other parallel processing libraries are available, for
+example \texttt{MPI} (see \cite{mpi}) which may result in quicker program run-times, but are notoriously harder to work
+with.
+
+\subsection{Resampling methods} 
+\label{sec:Resampling_methods}
+
+\cite{Douc2005} describe four methods for particle filter resampling. The most simple of these is the standard
+multinomial resampling method, where each particle is selected with probability equal to its weight (or proportional to
+its un-normalised weight). Stratified and systematic resampling methods are mentioned, but we choose to implement the
+residual resampling method, which has no mentioned drawbacks and is very intuitive.
+
+Let \(N^{(i)}\) count the number of times particle \(i\) is chosen in the resampling process. We can then split each
+\(N^{(i)}\) into two parts, one which is deterministic (which lowers the variance of this resampling method compared to
+multinomial sampling) based on the expectation of \(N^{(i)}\), and one which is random (the residual contribution). We
+define:
+\begin{align}
+N^{(i)} = \left \lfloor{n \omega^{(i)}}\right \rfloor + N^{(i), *}
+\end{align}
+where \(n w^{(i)}\) is the expectation of \(N^{(i)}\) (since \(\omega^{(i)}\) is the normalised weight) and \(N^{(i), *}\)
+follows a multinomial distribution which draws \(n - \sum_{i=1}^{n} \left \lfloor{n \omega^{(i)}}\right \rfloor\) (\(n\) is
+the total number of particles) counts so in total there are \(n\) counts. The weights of the multinomial resampling step
+are:
+\begin{align}
+\omega^{(i), *} = n \omega^{(i)} - \left \lfloor{n \omega^{(i)}}\right \rfloor
+\end{align}
+so the weights take into account how many draws of that particle have already occurred in the deterministic stage of the
+resampling method, also note that these weights are not normalised and they sum to \(n - \sum_{i=1}^{n} \left
+\lfloor{n \omega^{(i)}}\right \rfloor\). Figure \ref{fig:residualResample} shows an example of how residual sampling can work
+when a sample of size 100,000 is taken from a \(U(-5, 5)\) distribution and given weights according to a \(N(0,
+1)\) distribution.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{residual-sampling}
+\caption{An example of residual resampling to gain a sample from a \(N(0, 1)\) distribution. \protect\blueBox\ particles
+which counts have been deterministic from the floor of the particle count expectation, \protect\redBox\ particles which
+have been included from the multinomial resampling step}
+\label{fig:residualResample}
+\end{center}
+\end{figure}
+
+\section{A mixture of dynamic and static parameters}
+\label{sec:A_mixture_of_dynamic_and_static_parameters}
+
+We have seen how particle filter methods can be used to update our belief regarding dynamic parameters, that is,
+parameters which are thought to vary throughout time, which we have denoted \(\boldx_t\). We now consider the case
+where we have a mixture of dynamic (time varying) and static (non time varying) parameters. The filtering algorithms
+previously discussed do not work for static parameters as they have no model transition density and thus become stuck in
+position, not able to explore the posterior distribution. We represent our belief of the static parameter \(\boldz\) at
+time \(t\) via the posterior distribution \(p(\boldz | \data_t)\), and the joint distribution \(p(\boldTheta_t | \data_t)\)
+where \(\boldTheta_t = \{\boldz, \boldx_t\}\). Note we may use the notation \(\boldz_t\) to denote the time \(t\)
+posterior of the parameter \(\boldz\) - this does not indicate time variation in the parameter \(\boldz\).
+
+\subsection{Artificial evolution} 
+\label{sec:Artificial_evolution}
+
+One simple solution described in \cite{liu2001} based on ideas originally by \cite{Gordon1993} is to add an artificial
+evolution to the parameter \(\boldz\) so that \(\boldz\) is replaced by \(\boldz_t\) at time \(t\). We than have the dynamic
+system:
+\begin{align}
+\boldz_{t+1} = \boldz_t + \boldsymbol{\epsilon}_{\boldz, t}
+\label{eq:artificialEvolution}
+\end{align}
+where \(\boldsymbol{\epsilon}_{\boldz, t} \sim N(0, \boldW_t)\) and \(\boldW_t\) is typically small providing a minimal
+perturbation to \(\boldz_{t+1}\). This method allows the particles to move as the posterior distribution changes with
+each new observation of data. If the particles did not move we would have problems with particle degeneracy
+(\cite{cappe2007}). The method however introduces the problem that the variance of the posterior \(p(\boldz_t |
+\data_t)\) will be larger than the correct theoretical posterior \(p(\boldz | \data_t)\) and will compound at each time
+step \(t\). So there is a loss of information introducing the artificial evolution of the parameter \(\boldz\).
+
+In order to tackle the problem of the loss of information in artificial evolution, we first discuss the kernel smoothing
+methods of \cite{West1993A} in Section \ref{sec:Kernel_smoothing}. We then discuss how \cite{liu2001} use these methods
+for the artificial evolution problem in Section
+\ref{sec:Kernel_smoothing_methods_for_variance_reduction_in_artificial_evolution}.
+
+\subsection{Kernel smoothing} 
+\label{sec:Kernel_smoothing}
+
+Consider a particle approximation of the posterior \(p(\boldz | \data)\), which is \(\boldz^* = \{\boldz^{(1)}, \ldots,
+\boldz^{(n)}\}\) with importance weights \(\boldsymbol{w} = \{w^{(1)}, \ldots, w^{(n)}\}\). A typical approximation of
+\(p(\boldz | \data)\) is then:
+\begin{align}
+\hat{p}_1(\boldz | \data) = \sum_{i=1}^{n} \omega^{(i)} \boldz^{(i)}.
+\end{align}
+\cite{West1993A} however developed smooth kernel density approximations of the form:
+\begin{align}
+\hat{p}_2(\boldz | \data) = \sum_{i=1}^{n} \omega^{(i)} g_i(\boldz)
+\label{eq:kernelApprox}
+\end{align}
+where \(g_i(\boldz)\) denotes an elliptically symmetric \gls{PDF} centered at \(\boldm^{(i)}\) with variance \(h^2
+\boldsymbol{V}\), \(h\) is a smoothing parameter, \(\boldm^{(i)}\) is the kernel location of density \(g_i(\boldz)\),
+and \(\boldsymbol{V}\) is an estimate of the variance of \(p(\boldz | \data)\). We solely consider the use of a Gaussian
+density for \(g_i(\boldz)\), which we will see relates to the Gaussian perturbation in Section
+\ref{sec:Artificial_evolution}, although similar results will hold for other kernels.
+
+We follow \cite{West1993A} in using the Monte Carlo estimate of the variance:
+\begin{align} 
+\label{eq:kernelVariance}
+\boldsymbol{V} &= \sum_{i=1}^{n} \omega^{(i)} (\boldz^{(i)} - \overline{\boldz})^2 \notag \\
+               &= \sum_{i=1}^{n} \omega^{(i)} (\boldz^{(i)})^2 - \left( \sum_{i=1}^{n} \omega^{(i)} \boldz^{(i)} \right)^2
+\end{align}
+where \(\overline{\boldz} = \sum_{i=1}^{n} \omega^{(i)} \boldz^{(i)}\) is the Monte Carlo mean. 
+
+For \(h > 0\), we show that the kernel density approximation may have an undesirable variance greater than the variance
+of the target posterior distribution. We first consider that the moments of the kernel density approximations in
+Equation \eqref{eq:kernelApprox} are given by:
+\begin{align} 
+\E_{\hat{p}_2}(\boldz^k | \data) 
+&= \int_{-\infty}^\infty \boldz^k \sum_{i=1}^{n} \omega^{(i)} g_i(\boldz) \, \mathrm{d}\boldz \notag\\
+&= \sum_{i=1}^{n} \omega^{(i)} \int_{-\infty}^\infty \boldz^k g_i(\boldz) \, \mathrm{d}\boldz \notag\\
+&= \sum_{i=1}^{n} \omega^{(i)} \E_{g_i}(\boldz^k)
+\end{align}
+where we use the notation \(\E_{\hat{p}_2}(\boldz^k | \data)\) to denote the expectation of \(\boldz^k | \data\) with
+respect to the \gls{PDF} \(\hat{p}_2\) (similarly for the variance \(\V_{\hat{p}_2}(\boldz | \data)\)). The variance of
+the kernel density approximation is thus:
+\begin{align} 
+\V_{\hat{p}_2}(\boldz | \data) 
+&= \sum_{i=1}^{n} \omega^{(i)} \E_{g_i}(\boldz^2) - \left(\sum_{i=1}^{n} \omega^{(i)} \E_{g_i}(\boldz)\right)^2 \notag\\
+&= \sum_{i=1}^{n} \omega^{(i)} (h^2 \boldsymbol{V} + (\boldm^{(i)})^2) - \left(\sum_{i=1}^{n} \omega^{(i)} \boldm^{(i)}\right)^2 \notag\\
+&= h^2 \boldsymbol{V} + \sum_{i=1}^{n} \omega^{(i)} (\boldm^{(i)})^2 - \left(\sum_{i=1}^{n} \omega^{(i)} \boldm^{(i)}\right)^2.
+\label{eq:mixtureVariance}
+\end{align}
+Using a natural first choice of kernel location \(\boldm^{(i)} = \boldz^{(i)}\), we immediately see from Equations
+\eqref{eq:mixtureVariance} and \eqref{eq:kernelVariance} that \(\V_{\hat{p}_2}(\boldz | \data)  = h^2 \boldsymbol{V} +
+\boldsymbol{V}\), larger than the target variance of \(\boldsymbol{V}\). \cite{West1993A} describes one method of
+alleviating the problem of over estimating the target variance by specifying:
+\begin{align} 
+h = \frac{c}{n^\frac{1}{1 + 4d}}
+\end{align}
+where:
+\begin{align} 
+c = \left(\frac{4}{1 + 2d}\right)^\frac{1}{1 + 4d}
+\end{align}
+and \(d\) is the dimension of \(\boldz\) (the number of parameters). This enables \(h \rightarrow 0\) as \(n
+\rightarrow \infty\) and so \(\hat{p}_2(\boldz | \data)\) approaches \(p(\boldz | \data)\) (and \(\hat{p}_1(\boldz |
+\data)\)) as \(n\) increases.
+
+However for fixed \(n\), \(\hat{p}_2(\boldz | \data)\) is always over-dispersed relative to \(p(\boldz | \data)\). To
+correct the over-dispersion, \cite{West1993A} suggested shrinking Gaussian kernel locations \(\boldm^{(i)}\) from
+\(\boldz^{(i)}\) closer to the weighted mean of \(\boldz^*\), \(\overline{\boldz}\). Using parameter \(\alpha \in [0,
+1]\) we define the kernel locations as:
+\begin{align}
+\boldm^{(i)} = \alpha \boldz^{(i)} + (1 - \alpha) \overline{\boldz}.
+\end{align}
+Following from Equation \eqref{eq:mixtureVariance} the variance of the kernel density approximation with the new kernel
+locations is then:
+\begin{align} 
+\V_{\hat{p}_2}(\boldz | \data)  &= h^2 \boldsymbol{V} + \alpha^2 \boldsymbol{V}
+\end{align}
+and so the kernel density approximation will have the desired variance \(\boldsymbol{V}\) when \(\alpha = \sqrt{1 - h^2}\).
+
+Figure \ref{fig:kernel} shows an example of the effect of the two different kernel locations (with shrinkage:
+\(\boldm^{(i)} = \alpha \boldz^{(i)} + (1 - \alpha) \overline{\boldz}\), and without: \(\boldm^{(i)} = \boldz^{(i)}\))
+when \(\hat{p}_2(\boldz | \data)\) is used to approximate a \(N(0, 1)\) distribution via an equally weighted random
+sample of size 5,000. When \(h\) is low, there is little effect of adding shrinkage to the kernel locations, and the
+resulting kernel density estimate is very un-smooth. However, when \(h\) becomes larger, the kernel density estimate
+with shrunk kernel locations more accurately approximates the theoretical distribution. The density estimate in red,
+which simply takes the kernel locations as the particle locations, has clear over-dispersion.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{kernel-smooth}
+\caption{Smooth kernel density estimates when \(h = 0.1\) (top), \(h = 0.5\) (middle), and \(h = 0.9\) (bottom).
+\protect\redSolidLine\ the kernel density estimate with no shrinkage, \protect\blueDashedLine\ the kernel density
+estimate with shrinkage}
+\label{fig:kernel}
+\end{center}
+\end{figure}
+
+\subsection{Kernel smoothing methods for variance reduction in artificial evolution}
+\label{sec:Kernel_smoothing_methods_for_variance_reduction_in_artificial_evolution}
+
+The problem with a mixture of Gaussian distributions with kernel locations at each particle (\(\boldm^{(i)} =
+\boldz^{(i)}\)) is very similar in nature to each particle being given an artificial evolution via Gaussian noise. In
+the case of the mixture of Gaussian distributions the particle sample has Monte Carlo variance \(\boldV\), but the
+smooth approximation has variance \(\boldV + h^2 \boldV\). In the case of artificial evolution the particle sample has
+Monte Carlo variance \(\boldV_t\) at time \(t\), but after artificial evolution the particles have variance \(\boldV_t +
+\boldW_t\) (\(\boldW_t\) is the variance of the artificial perturbation \(\boldsymbol{\epsilon}_{\boldz, t}\)). Both methods
+lead to over-dispersion of the target distribution.
+
+The solution to over-dispersion in the kernel smoothing case was to shrink the kernel locations towards the sample mean,
+and a very similar solution is possible in the case of artificial evolution. The artificial evolution in Equation
+\eqref{eq:artificialEvolution} implies:
+\begin{align}
+\V(\boldz_{t+1} | \data_t) &= \V(\boldz_t + \boldsymbol{\epsilon}_{\boldz, t} | \data_t) \notag \\
+&= \V(\boldz_t | \data_t) + \boldW_t + \C(\boldz_t, \boldsymbol{\epsilon}_{\boldz, t} | \data_t) +
+\C(\boldsymbol{\epsilon}_{\boldz, t}, \boldz_t, | \data_t).
+\end{align}
+Previously \(\C(\boldz_t, \boldsymbol{\epsilon}_{\boldz, t} | \data_t) = \C(\boldsymbol{\epsilon}_{\boldz, t}, \boldz_t
+| \data_t) = \boldsymbol{0}\) since there was independence between the current state \(\boldz_t\) and the artificial
+perturbation \(\boldsymbol{\epsilon}_{\boldz, t}\). We allow these covariance terms to be non-zero to enable the
+artificial perturbation to not increase the variance of the particle approximation (\(\V(\boldz_{t+1} | \data_t) =
+\V(\boldz_t | \data_t)\)). We thus set:
+\begin{align}
+\C(\boldz_t, \boldsymbol{\epsilon}_{\boldz, t} | \data_t) 
+&= \C(\boldsymbol{\epsilon}_{\boldz, t}, \boldz_t | \data_t) \notag \\
+&=-\frac{1}{2} \boldW_t
+\end{align}
+for symmetric variance matrix \(\boldW_t\) (for random vectors \(\boldsymbol{X}\) and \(\boldsymbol{Y}\),
+\(\C(\boldsymbol{X}, \boldsymbol{Y}) = \C(\boldsymbol{Y}, \boldsymbol{X})'\) so the covariance matrices may only be
+equal when they are symmetric). This implies:
+\begin{align}
+\C(\boldz_{t+1}, \boldz_t | \data_t)
+&= \E(\boldz_{t+1} \boldz | \data_t) - \E(\boldz_{t+1} | \data_t)\E(\boldz_t | \data_t) \notag \\
+&= \E((\boldz_t + \boldsymbol{\epsilon}_{\boldz, t}) \boldz_t | \data_t) - \bar{\boldz_t}^2 \notag \\
+&= \E(\boldz_t^2 + \boldsymbol{\epsilon}_{\boldz, t} \boldz_t | \data_t) - \bar{\boldz_t}^2 \notag \\
+&= \E(\boldz_t^2 | \data_t) + \E(\boldsymbol{\epsilon}_{\boldz, t} \boldz_t | \data_t) - \bar{\boldz_t}^2 \notag \\
+&= (\boldV_t + \bar{\boldz_t}^2) + (-\frac{1}{2} \boldW_t + 0) - \bar{\boldz_t}^2 \notag \\
+&= \boldV_t -\frac{1}{2} \boldW_t.
+\end{align}
+It follows similarly that \(\C(\boldz_t, \boldz_{t+1} | \data_t) = \boldV_t -\frac{1}{2} \boldW_t\) which is
+automatic only in the case of scalar \(\boldz_{t+1}\) and \(\boldz_t\). 
+
+Under the assumption of approximate joint normality of \(\boldTheta_t, \boldsymbol{\epsilon}_{\boldz, t} | \data_t\), we
+may use standard results regarding the conditional distribution of a multivariate normal distribution. An outline of the
+results are as follows: 
+
+For a multivariate normal vector \(\boldsymbol{Y} \sim N(\boldsymbol{\mu}, \boldSigma)\), consider partitioning
+\(\boldMu\) and \(\boldsymbol{Y}\) into:
+\begin{equation}
+\begin{aligned}
+\boldsymbol\mu =
+\begin{bmatrix}
+ \boldsymbol\mu_1 \\
+ \boldsymbol\mu_2
+\end{bmatrix}
+\end{aligned}
+\qquad \text{and} \qquad
+\begin{aligned}
+\boldsymbol{Y}=
+\begin{bmatrix}
+\boldsymbol{y}_1 \\ 
+\boldsymbol{y}_2 
+\end{bmatrix}
+\end{aligned}
+\end{equation}
+with a similar partition of \(\boldSigma\) into:
+\begin{align} 
+\begin{bmatrix}
+\boldSigma_{11} & \boldSigma_{12} \\
+\boldSigma_{21} & \boldSigma_{22}
+\end{bmatrix}.
+\end{align}
+The conditional distribution of the first partition given the second is then: 
+\begin{align} 
+\boldy_1 | \boldy_2 \sim
+N(\boldMu_1 + \boldSigma_{12} \boldSigma_{22}^{-1} (\boldy_2 - \boldMu_2), 
+\boldSigma_{11} - \boldSigma_{12}{\boldSigma_{22}}^{-1} \boldSigma_{21}).
+\end{align}
+
+In our problem: 
+\begin{align} 
+\boldMu_1 &= \boldMu_2 = \bar{\boldz}_t \notag\\
+\boldSigma_{11} &= \boldSigma_{22} = \boldV_t \notag \\
+\boldSigma_{12} &= \boldSigma_{21} = \boldV_t -\frac{1}{2} \boldW_t \notag
+\end{align}
+and so the conditional normal evolution, as stated by \cite{liu2001}, is:
+\begin{align} 
+\boldz_{t+1} | \boldz_t 
+&\sim N(\bar{\boldz}_t + (\boldV_t -\frac{1}{2} \boldW_t) \boldV_t^{-1} (\boldz_t - \bar{\boldz}_t), 
+\boldV_t - (\boldV_t -\frac{1}{2} \boldW_t) \boldV_t^{-1} (\boldV_t -\frac{1}{2} \boldW_t)) \notag \\
+&= N(\boldA_t \boldz_t + (\boldsymbol{I} - \boldA_t) \bar{\boldz}_t, 
+(\boldsymbol{I} - \boldA_t^2) \boldV_t)
+\label{eq:conditionalNormal}
+\end{align}
+where:
+\begin{align} 
+\boldA_t = \boldsymbol{I} - \frac{1}{2} \boldW_t \boldV_t^{-1}.
+\end{align}
+\cite{liu2001} restrict to the special case where the artificial evolution variance matrix is specified by a standard
+discount factor, and use the symmetric matrix:
+\begin{align}
+\boldW_t = \boldV_t (\frac{1}{\delta} - 1)
+\end{align}
+the conditional distribution in Equation \eqref{eq:conditionalNormal} then simplifies further to:
+\begin{align}
+\boldz_{t+1} | \boldz_t \sim N(\alpha \boldz_t + (1 - \alpha) \overline{\boldz}, h^2 \boldsymbol{V}_t)
+\label{eq:artificialCorrection}
+\end{align}
+where \(\delta \in [1/3, 1]\) and is typically 0.95 - 0.99 (\cite{liu2001} suggest around 0.99), \(\alpha =
+\frac{3\delta - 1}{2\delta}\), and \(h = \sqrt{1 - \alpha^2}\). That is, a very similar form to as was seen to correct
+over-dispersion for the kernel smoothing in Section \ref{sec:Kernel_smoothing}. 
+
+Using the transition density \(p(\boldz_{t+1} | \boldz_t)\) implied by Equation \eqref{eq:artificialCorrection} means
+that if \(p(\boldz_t | \data_t)\) has finite mean \(\bar{\boldz}_t\) and variance \(\boldV_t\) then \(p(\boldz_{t+1} |
+\data_t)\) will also have finite mean \(\bar{\boldz}_t\) and variance \(\boldV_t\). We therefore have a solution to the
+problem of increasing variance and loss of information when using artificial evolution.
+
+\subsection{An example of variance reduction in artificial evolution}
+
+Here we present a simple example where we wish to perform inference on a single static parameter \(\mu\) using the
+methods described in Section \ref{sec:Kernel_smoothing_methods_for_variance_reduction_in_artificial_evolution}. We
+observe data points from a \(N(\mu, 2^2)\) distribution, the true value of \(\mu\) being 1. We start with the (poor
+choice of) prior \(\mu \sim N(5, 1^2)\) and at each time point \(t\), we observe the data vector of length two,
+\(\boldy_t = (y_t^{(1)}, y_t^{(2)})\). The theoretical posterior distribution of \(\mu | \data_t\) is available:
+\begin{align} 
+\mu | \data_t \sim N\left( \frac{20 + \sum_{i=1}^{t} y_i^{(1)} + y_i^{(2)}}{4 + 2t},
+\left(1 + \frac{t}{2}\right)^{-1} \right).
+\end{align}
+We use the discount factor \(\delta = 0.99\) as suggested by \cite{liu2001}, and 50,000 particles updated via the
+Auxiliary Particle Filter. Despite the large sample, the program run times were very quick. Results can be seen in
+Figure \ref{fig:filter1}, which conveys how accurately the sampled particles follow the theoretical posterior
+distribution.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{example-filter}
+\caption{Example of the Auxiliary Particle Filter at time 1 (top), 10 (middle), 20 (bottom). The histogram represents
+the particle posterior approximation of the static parameter \(\mu\). \protect\blueSolidLine\ the prior density,
+\protect\greenSolidLine\ the theoretical posterior}
+\label{fig:filter1}
+\end{center}
+\end{figure}
+
+\section{An updated model}
+\label{sec:An_updated_model}
+
+We present a modification to the non-homogeneous Poisson process model of Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section \ref{model},
+which allows the log of a team's resource to follow a random walk. We therefore consider the model:
+\begin{align}
+  \log(\lambda_{i}(t, w)) = h + \alpha_i(t) e^{LR_{i, w}} - (1 - \alpha_j(t)) e^{LR_{j, w}} + \rho(t)
+  \label{eq:dynamicHomeRate}\\
+  \log(\mu_{j}(t, w)) = a + \alpha_j(t) e^{LR_{j, w}} - (1 - \alpha_i(t)) e^{LR_{i, w}} + \rho(t)
+  \label{eq:dynamicAwayRate}
+\end{align} 
+where \(LR_{k, w}\) represents the log of team \(k\)'s resource in week \(w\) of the season (the log-resource) and
+\(\lambda_{k}(t, w)\) is team \(k\)'s instantaneous rate of scoring at time \(t\) of the match in week \(w\), similarly
+for the away team regarding \(\mu_{k}(t, w)\). The random walk process for team \(k\) is:
+\begin{align}
+LR_{k, w+1} = LR_{k, w} + \epsilon_k 
+\label{eq:randomWalk}
+\end{align}
+where \(\epsilon_k \sim N(0, \sigma^2)\) for all \(k = 1, \ldots, 20\), so the log-resource for each team follows an
+independent random walk. Inference is now concerned with the parameter vector \(\boldTheta_w = (\boldz, \boldLR_w)\)
+where \(\boldz = (h, a, c_{-1}, c_{0}, c_{1}, d_{-1}, d_{0}, d_{1}, \rho_1, \rho_2)\) is the vector of 10 static
+parameters and \(\boldLR_w = (LR_{1, w}, \ldots, LR_{20, w})\) is the vector of 20 dynamic log-resource parameters.
+
+\subsection{Updated model inference}
+\label{sec:Updated_model_inference}
+
+We now follow through a full example of how the particle filter updates the posterior belief of the parameter vector
+\(\boldTheta_w\) for the season 2011/2012 in the \gls{EPL}. We employ the method of the auxiliary particle filter as
+discussed in Section \ref{sec:Auxiliary_particle_filter}, and also show how an optimal value of \(\sigma^2\) (the
+variance of the random walk) can be found. Note the subtle difference in notation used to denote the week \(w\) and the
+weight \(\omega\).
+
+We start the inference process by obtaining a particle approximation of \(p(\boldTheta_1 | \data_0)\), that is, the
+prior distribution of the week 1 parameters before we have observed any data. We begin by using a random-walk \gls{MH}
+algorithm, assuming static resource parameters (as was in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:Bayesian_inference_for_parameter_estimation}) using all data from the previous season, 2010/2011. We used the
+following prior distributions:
+\begin{equation}
+\begin{aligned}
+h &\sim N(0.4, 0.5^2) \\
+a &\sim N(0.08, 0.5^2) \\
+\rho_1 &\sim N(1.098, 0.5^2) \\
+\rho_2 &\sim N(1.504, 0.5^2) \\
+\end{aligned}
+\qquad\qquad
+\begin{aligned}
+c_i &\sim \beta(1.5, 1.5) \text{ for } i \in \{-1, 0, 1\} \\
+d_i &\sim \beta(3, 1) \text{ for } i \in \{-1, 0, 1\} \\
+LR_k &\sim N(-0.7, 1^2) \text{ for } k \in \{1,\ldots, 20\}
+\end{aligned}
+\end{equation}
+using the same reasoning as in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:Bayesian_inference_for_parameter_estimation}. The prior on the log-resource parameters, \(LR_k\), is quite
+vague, in that a 95\% prior credible interval for a team's resource is \((0.0700\, 3.5253)\).
+
+The resulting posterior distribution was then used as our particle approximation of \(p(\boldTheta_0 | \data_0)\), and
+we obtain an approximation of \(p(\boldTheta_1 | \data_0)\) by passing the particles through the system transition
+model. This means that the prior for the log-resource parameters at week \(w = 1\), \(p(\boldLR_1 | \data_0)\), will
+have higher variance than \(p(\boldLR_0 | \data_0)\) - in order to take account of uncertainty regarding how the team's
+abilities change between seasons. For the static parameters, the variance of \(p(\boldz_1 | \data_0)\) will be equal to
+that of \(p(\boldz_0 | \data_0)\) since the system model for these parameters is static through each week.
+
+The three teams who were promoted into the 2011/2012 \gls{EPL}, (Queens Park Rangers, Norwich City, and Swansea City)
+were given the particle representation for the log-resource from the three teams whom they replaced (Birmingham City,
+Blackpool, and West Ham United).
+
+We observe data for week \(w\) sequentially for \(w = 1, \ldots, 38\). The posterior distribution of \(\boldTheta_w\)
+after observing data from week \(w\) is \(p(\boldTheta_w | \data_w)\) and is approximated by a set of \(n\) equally
+weighted particles \(\{\boldTheta_w^{(1)}, \ldots, \boldTheta_w^{(n)}\}\).
+
+Upon the arrival of data from week \(w+1\), \(\boldy_{w+1}\), we firstly identify the current kernel location vector of
+the 10 static parameters:
+\begin{align}
+\boldm_w^{(i)} = \alpha \boldz_w^{(i)} + (1 - \alpha) \overline{\boldz_w}.
+\end{align}
+In order to perform the auxiliary resampling step, we calculate first-stage weights for each particle \(i\) as:
+\begin{align}
+\overline{\omega}^{(i)}_1 = p(\boldy_{w+1} | \boldLR_w^{(i)}, \boldm_w^{(i)})
+\end{align}
+since \(\boldLR_w^{(i)}\) is the mean of the random log-resource parameter vector when evolving to
+\(\boldLR_{w+1}^{(i)}\) for particle \(i\). We then sample with replacement the auxiliary indicators \(j\) with
+probabilities proportional to \(\overline{\omega}^{(i)}_1\). 
+
+Now the particles must be propagated based on the auxiliary indicators \(j\), the static parameters are propagated
+via the method of artificial evolution corrected for information loss (as described in Section
+\ref{sec:Kernel_smoothing_methods_for_variance_reduction_in_artificial_evolution}):
+\begin{align}
+\boldz_{w + 1}^{(j)} \sim N(\boldm_w^{(j)}, h^2 \boldsymbol{V}_w) 
+\end{align}
+where \(\boldsymbol{V}_w\) is the covariance matrix of the 10 static parameters, estimated from the sample covariance
+matrix of the particle approximation of \(p(\boldz | \data_w)\). We use the discount factor \(\delta = 0.99\) as
+suggested by \cite{liu2001}, which implies \(h^2 = 0.010\). The dynamic parameters are more simply propagated as per
+the system transition model:
+\begin{align}
+LR_{k, w+1}^{(j)} = LR_{k, w}^{(j)} + \epsilon_k \quad \text{for \(k = 1, \ldots, 20\)}.
+\end{align}
+Finally, we calculate second-stage weights for particle \(j\) proportional to:
+\begin{align}
+\overline{\omega}^{(j)}_2 = \frac{p(\boldy_{w+1} | \boldLR_{w+1}^{(j)}, \boldz_{w+1}^{(j)})}
+                                 {p(\boldy_{w+1} | \boldLR_w^{(j)}, \boldm_w^{(j)})}.
+\end{align}
+A resampling step of the particles \(j\) based on these second-stage weights provides a set of equally weighted
+particles \(\{\boldTheta_{w+1}^{(1)}, \ldots, \boldTheta_{w+1}^{(n)}\}\) which provide an approximation of the posterior
+\(p(\boldTheta_{w+1} | \data_{w+1})\) where \(\boldTheta_{w+1}^{(k)} = (\boldz_{w + 1}^{(k)}, \boldLR_{w+1}^{(k)})\).
+
+\subsection{Finding the optimal variance}
+\label{sec:Finding_the_optimal_variance}
+
+We now have sufficient tools to give a particle approximation of \(p(\boldTheta_w | \data_w)\). We use these particles
+to simulate match results, providing one week ahead forecasts. We can do this for different values of \(\sigma^2\), and
+in a similar fashion to determining the optimal value of the parameters \(\gamma_1\) and \(\gamma_2\) in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:A_prior_for_R}, record the value of a performance metric. We follow \cite{Owen2011} who used the geometric mean
+of the one-week ahead predicted probabilities for the match outcomes that were actually observed:
+\begin{align}
+GM_{1, 38} = \exp(\frac{1}{380} \sum_{w = 1}^{38} \sum_{m \in M_w} \log(\hat{\Prob}(O_m | \data_{w-1})))
+\end{align}
+where again, \(M_w\) is the set of 10 matches in week \(w\), \(O_m\) is the observed outcome of match \(m\) (either a
+home team win, draw, or away team win), and \(\data_{w-1}\) is the observed data up to but not including week \(w\). The
+interpretation of the metric \(GM_{1, 38}\) is then perhaps simpler than the metric \(\sum_{w=1}^{38} LSR_w\) previously
+considered in Chapter \ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information}
+Section \ref{sec:A_prior_for_R}, although the two methods will be totally in agreement with regards to determining the
+optimal \(\sigma^2\).
+
+Using 100,000 particles, a plot of various different values for \(\sigma^2\) and the corresponding \(GM_{1, 38}\) can be
+seen in Figure \ref{fig:metricPlotComb}.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{metricPlotComb}
+\caption{Values of the metric \(GM_{1, 38}\) for different values of \(\sigma^2\) in the range 0 to 0.5 (top) and 0 to
+0.02 (bottom). \protect\blackSolidLine\ the calculated values, \protect\redDashedLine\ a smooth LOESS estimate}
+\label{fig:metricPlotComb}
+\end{center}
+\end{figure}
+Again, we follow \cite{Owen2011} and show \(\sigma^2\) in the range of 0 to 0.02, there is however no concrete evidence
+that there is an optimal \(\sigma^2 > 0\), as highlighted by the smooth \gls{LOESS} estimate (see \cite{cleveland1979})
+which is typically decreasing in \(\sigma^2\). An optimal value of \(\sigma^2 > 0\) would have suggested that there is
+benefit in allowing the team log-resource parameters to follow a dynamic system, but somewhat unfortunately, we cannot
+deduce this from our results.
+
+This is in contrast to the findings of \cite{Owen2011}, who found an optimal value of \(\sigma^2\) near 0.004 based on
+the metric \(GM_{1, 38}\). This is likely due to one (or both) of the following reasons:
+\begin{enumerate}
+  \item The different data used, in our case the 2011/2012 season from the \gls{EPL}, and in the case of
+  \cite{Owen2011}, seasons 2003/2004, 2004/2005, and 2005/2006 from the \gls{SPL}
+  \item The different model specifications used, in our case a dynamic system for a single `resource'
+  parameter for each team, and in the case of \cite{Owen2011}, a dynamic system for an `attack'
+  and `defence' parameter for each team
+\end{enumerate}
+That is, it may be that the teams in the \gls{SPL} vary in ability more throughout a season(s), or that attack and
+defense strengths may vary throughout a season, but overall team abilities/resources do not.
+
+We continue analysis of the particle filtering methods and the dynamic team log-resource model using \(\sigma^2 =
+0.0001\), a very small value which should still allow adequate propagation of the particles, not unlike the artificial
+evolution methods described in section \ref{sec:Artificial_evolution}.
+
+\subsection{Inference results}
+\label{sec:Inference_results}
+ 
+Here we show time series plots for the 0.025 and 0.975 posterior quantiles, along with the posterior mean of the
+particle approximation of \(p(\boldTheta_w | \data_w)\) using 100,00 particles, for each parameter in \(\boldTheta_w\).
+The plots are shown in Figures \ref{fig:filter-0} to \ref{fig:filter-4}.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{filter-0}
+\caption{Time series plot of parameters \(h\), \(a\), \(c_{-1}\), \(c_0\), \(c_{1}\), and \(d_{-1}\).
+\protect\redSolidLine\ posterior mean, \protect\blackDashedLine\ 95\% BCI}
+\label{fig:filter-0}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{filter-1}
+\caption{Time series plot of parameters \(d_{1}\), \(d_0\), \(\rho_1\), \(\rho_2\) and the log-resource team
+parameters. \protect\redSolidLine\ posterior mean, \protect\blackDashedLine\ 95\% BCI}
+\label{fig:filter-1}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{filter-2}
+\caption{Time series plot of the team log-resource parameters. \protect\redSolidLine\ posterior mean,
+\protect\blackDashedLine\ 95\% BCI}
+\label{fig:filter-2}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{filter-3}
+\caption{Time series plot of the team log-resource parameters. \protect\redSolidLine\ posterior mean,
+\protect\blackDashedLine\ 95\% BCI}
+\label{fig:filter-3}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{filter-4}
+\caption{Time series plot of the team log-resource parameters. \protect\redSolidLine\ posterior mean,
+\protect\blackDashedLine\ 95\% BCI}
+\label{fig:filter-4}
+\end{center}
+\end{figure}
+
+There are some notable fluctuations in posterior probability of the team log-resource parameters which correspond to
+large match scores. For example week \(w = 9\) featured a score of Manchester United 1 - 6 Manchester City and there is
+clear spike in Manchester City's log-resource at this time, conversely, the log-resource of Manchester City appears to
+be decreasing at this time. Other notable results include: Manchester United 5 - 0 Wigan Athletic in week 18, Newcastle
+United 3 - 0 Manchester United in week 20, and West Brom 1 - 0 Chelsea in week 27. We also comment on the parameter
+estimates with comparison to parameter estimates from simulated data in Section
+\ref{sec:Inference_using_simulated_data}.
+
+\subsection{Model and inference performance}
+
+Here we make comparisons regarding the one-week-ahead predictive performance of the dynamic log-resource model (which we
+will denote DM), with our proposed model (denoted M) in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section \ref{model}.
+In order for model DM to be comparable to the models shown in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section
+\ref{sec:Model_comparisons}, we again consider matches from weeks 6 to 38. These weeks were previously considered since
+after 5 weeks of matches, all the teams were comparable in that they had all played a common team. The results of the
+comparison can be seen in Table \ref{tab:MvsDM}.
+\begin{table} 
+\begin{center}
+\fbox{
+\begin{tabular}{cccc}
+model & \(\sum_{w=6}^{38} LSR_w\) & \(GM_{6, 38}\) & \(O_P\) \\
+\hline
+M     & -324.26                   & 0.3743         & 60.33   \\
+DM    & -324.23                   & 0.3744         & 48.18   \\
+\end{tabular}}
+\end{center}
+\caption{\label{tab:MvsDM} A comparison of the sum of the logarithmic scoring rule, the geometric mean of the one-week
+ahead predicted probabilities for the match outcomes that were actually observed, and the betting
+profit, for models M and DM for weeks 6 to 38}
+\end{table}
+The results are almost identical, as one would expect - the models and inference methods are in many ways the same. With
+regards to the models, for model DM we used a very small value of \(\sigma^2\) which effectively reduces the dynamic
+model to the static model of M. With regards to the inference methods, we used posterior samples from the previous
+season's data (the 2010/2011 season) to give the week \(w = 1\) prior distribution approximation for the model DM
+parameters. Likewise, for the parameters in model M, we used the previous season data for prior elicitation, albeit in a
+much simpler way. 
+
+In terms of betting against the UK bookmaker Bet365 on matches in weeks 6 to 38, the models did not perform so
+similarly, which may be at first somewhat unintuitive given the previous comments. The betting profits are shown in
+Table \ref{tab:MvsDM}, under the notation \(O_P\). We thus choose to examine the differences in one-week-ahead predicted
+probabilities between the two models, a plot of which can be seen in Figure \ref{fig:MandDM}.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{MandDM}
+\caption{Scatter plot of the home win (top), draw (middle), and away win (bottom) probabilities predicted by the models
+M and DM for 330 matches from weeks 6 to 380. \protect\redDashedLine\ the line \(y = x\), \protect\blueSolidLine\ a
+smooth LOESS estimate}
+\label{fig:MandDM}
+\end{center}
+\end{figure} 
+The values in the plot do largely lie on the line \(y = x\), but there are some subtle differences which lead to the
+disparity in the betting profits - which can be influenced by only a single bet being placed or not placed. The smooth
+\gls{LOESS} estimate helps to display that the models are in the most disagreement for events which are at the tail end
+of being likely or unlikely. This is most probably due to the choice of prior used for the inference of the model M
+parameters, the ranking prior may mean that model M places higher probability on stronger teams winning (and likewise,
+less on weak teams).
+
+In this case the most notable difference is between the computational efficiency of the inference of model M and DM.
+In situations when data are observed sequentially, \gls{MCMC} methods with \gls{MH} updates are very inefficient.
+Given a posterior sample, \gls{MH} does not immediately provide a method of updating the sample based on any new data.
+That is, we cannot use the sample as a prior which may be combined with the likelihood of new data in order to sample
+from a new posterior. One must simply discard the posterior sample and start again using all the available data.
+Particle filtering methods retain the posterior sample at each point and it is simply updated in accordance with the
+likelihood of the new data from each week as it arrives.
+
+Furthermore, to take a single sample using \gls{MH} we must calculate the log-likelihood up to 30 times (the full
+log-likelihood may not need to be taken if terms may be cancelled in the \gls{MH} acceptance ratio) for each of the 30
+model parameters. A single sample using particle filtering methods may only require the log-likelihood to be calculated
+once or twice (twice with algorithms which have two stages of weights for example the auxiliary particle filter).
+
+% Program run-times are presented in Table \ref{tab:runtimes} which display the time taken for the inference process
+% throughout the season. That is, the time to generate 100,000 particles/samples from the posteriors \(p(\boldTheta_M |
+% \data_w)\) and \(p(\boldTheta_{DM} | \data_w)\) for each week \(w = 1, \ldots, 38\) where \(\boldTheta_M\) is the
+% parameter space for model M, \(\boldTheta_{DM}\) is the parameter space for model DM, and \(\data_w\) is all the data up
+% to and including week \(w\).
+% \begin{table}
+% \begin{center} 
+% \fbox{
+% \begin{tabular}{ccc}
+% model & time & relative\\
+% \hline
+% M  & 12,745  & 39.58   \\
+% DM & 322     & 1
+% \end{tabular}
+% }
+% \end{center}
+% \caption{\label{tab:runtimes} The time (in seconds) to gather posterior samples for models M and DM using all data up to
+% each week \(w = 1, \ldots, 38\)}
+% \end{table}
+
+Program run-times are displayed in Figure \ref{fig:runtimes} which show the cumulative time taken for the inference
+process throughout the season. That is the time to generate 100,000 particles/samples from the posteriors
+\(p(\boldTheta_M | \data_w)\) using random-walk \gls{MH}, and \(p(\boldTheta_{DM} | \data_w)\) using the auxiliary
+particle filter, for each week \(w = 1, \ldots, 38\). \(\boldTheta_M\) denotes the parameter vector for model M,
+\(\boldTheta_{DM}\) is the parameter vector for model DM, and \(\data_w\) is all the data up to and including week
+\(w\).
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{runtimes}
+\caption{The cumulative time to take 100,000 samples from the posteriors \(p(\boldTheta_M | \data_w)\)
+(\protect\blackSolidLine) and \(p(\boldTheta_{DM} | \data_w)\) (\protect\redSolidLine) for weeks \(w = 1, \ldots, 38\)}
+\label{fig:runtimes}
+\end{center}
+\end{figure}
+It is clear that the computational time for the particle filtering sampling method scales linearly as the amount of data
+increases each week. Conversely, due to the nature of repeating the inference process for the entirety of the data each
+week, the \gls{MH} sampling method scales exponentially.
+
+There is thus clear benefit in the particle filter method for time critical applications, in particular when the total
+amount of observed data is large. To perform inference for matches in-play, \gls{MH} may be useful for the first few
+weeks, but will soon become too slow to be useful, as the match will have changed significantly (or even finished) by
+the time the inference process is complete. Particle filtering methods are however capable of updating a whole week's
+worth of data in less than 10 seconds - fast enough to update posterior distributions for in-play matches.
+
+\subsection{Combining MH and particle filtering methods}
+\label{sec:Combining_MH_and_particle_filtering_methods}
+
+As noted by \cite{liu2001}, sequential filtering methods inherently induce approximation errors which can build up over
+time. While it does not appear that there are problems with model performance or particle degeneracy in our example, as
+noted by the performance indicators in Table \ref{tab:MvsDM} and the time series plots of the model parameters in
+Figures \ref{fig:filter-0} to \ref{fig:filter-4}, it may be the case for longer time periods or different data/models.
+In this case, one may choose to `refresh' the particle sample in an off-line setting when there is sufficient time using
+more standard \gls{MCMC} methods.
+
+We thus propose that in a real setting, the optimal strategy may be to perform an off-line analysis, using for example
+\gls{MH}, in order to generate posterior samples when there is ample time after matches have ended, and then update the
+samples using on-line particle filtering methods while matches are in-play. This would allow the user to be informed by
+the most up-to-date posterior distribution during a match.
+
+\subsection{Inference using simulated data}
+\label{sec:Inference_using_simulated_data}
+
+We also study the performance of the particle filtering method when the true value of \(\boldTheta_w\) is known for all
+\(w\). Match result data from a single season are simulated from these true parameter values, we then use the particle
+filtering algorithm described in Section \ref{sec:Updated_model_inference} to recover the true parameter values. The
+true values for the dynamic log-resource parameters are as follows:
+\begin{align} 
+LR_{k, w} = \cos\left(U_k + \frac{w}{15}\right) + \epsilon_{k, w}
+\end{align}
+where \(U_k\) is a random variate drawn from a \(U(0, 2\pi)\) distribution and \(\epsilon_{k, w}\) is random
+noise added at each week \(w\) via a \(N(0, 0.05^2)\) distribution. The true values for the static parameters are:
+\begin{equation}
+\begin{aligned}
+h &= 0.4 \\
+a &= 0.1 \\
+\rho_1 &= 1 \\
+\rho_2 &= 1.5 \\
+c_{-1} &= 0.7 \\
+\end{aligned}
+\qquad\qquad
+\begin{aligned}
+c_{0} &= 0.4 \\
+c_{1} &= 0.6 \\
+d_{-1} &= 0.9 \\
+d_{0} &= 0.5 \\
+d_{1} &= 0.3 \\
+\end{aligned}
+\end{equation}
+These true parameter values were chosen so that match simulations result in scorelines which are in line with our
+expectations of matches in the \gls{EPL}.
+
+Determination of \(\sigma^2\) is the same as in Section \ref{sec:Finding_the_optimal_variance}, but since the underlying
+team log-resources clearly vary throughout a season, the optimal value of \(\sigma^2\) is much clearer, as is shown in
+Figure \ref{fig:metricPlotSim}.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{metricPlotSim}
+\caption{Values of \(GM_{1, 38}\) corresponding to different values of \(\sigma^2\)}
+\label{fig:metricPlotSim}
+\end{center}
+\end{figure}
+Thus, for the simulated league data, we use \(\sigma^2 = 0.06131\) which corresponded to \(GM_{1, 38} = 0.4487\). The
+inference process was started by drawing a random sample with mean equal to the true parameter value and it was tested how the
+particles, approximating the posterior distribution \(p(\boldTheta_w | \data_w)\), behaved throughout the weeks \(w = 1,
+\ldots, 38\). Again, we display time series plots for the 0.025 and 0.975 posterior quantiles, along with the posterior
+mean of the particle approximation of \(p(\boldTheta_w | \data_w)\), but we can also now display the true underlying
+parameter values. The plots are shown in Figures \ref{fig:sim-filter-0} to \ref{fig:sim-filter-4}.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{sim-filter-0}
+\caption{Time series plot of parameters \(h\), \(a\), \(c_{-1}\), \(c_0\), \(c_{1}\), and \(d_{-1}\).
+\protect\redSolidLine\ posterior mean, \protect\blackDashedLine\ 95\% BCI, \protect\greenSolidLine\ the true parameter
+value}
+\label{fig:sim-filter-0}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{sim-filter-1}
+\caption{Time series plot of parameters \(d_0\), \(d_{-1}\), \(\rho_1\), \(\rho_2\), and the team log-resource
+parameters. \protect\redSolidLine\ posterior mean, \protect\blackDashedLine\ 95\% BCI, \protect\greenSolidLine\ the true
+parameter value}
+\label{fig:sim-filter-3}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{sim-filter-2}
+\caption{Time series plot of the team log-resource parameters. \protect\redSolidLine\ posterior mean,
+\protect\blackDashedLine\ 95\% BCI, \protect\greenSolidLine\ the true parameter value}
+\label{fig:sim-filter-2}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{sim-filter-3}
+\caption{Time series plot of the team log-resource parameters. \protect\redSolidLine\ posterior mean,
+\protect\blackDashedLine\ 95\% BCI, \protect\greenSolidLine\ the true parameter value}
+\end{center}
+\end{figure}
+%
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width = 14cm]{sim-filter-4}
+\caption{Time series plot of the team log-resource parameters. \protect\redSolidLine\ posterior mean,
+\protect\blackDashedLine\ 95\% BCI, \protect\greenSolidLine\ the true parameter value}
+\label{fig:sim-filter-4}
+\end{center}
+\end{figure}
+
+Firstly, let us consider the tracking ability of the 10 static parameters. It is clear that the variance of the
+posterior approximation is deceasing throughout the season, most notably in the parameters \(h\), \(a\), \(\rho_1\) and
+\(\rho_2\) - likely due to the fact that these parameters are not constrained to be \(\in [0, 1]\) like the \(c_i\) and
+\(d_i\) parameters. It is possible to `home in' on the true static parameter value due to the methods of \cite{liu2001}
+for correcting loss of information in artificial evolution. A similar pattern is not observed in the time series plots
+for the static parameters using real data (Figure \ref{fig:filter-0} and Figure \ref{fig:filter-1} in Section
+\ref{sec:Inference_results}) because there the particles at week \(w = 1\) were obtained from data from the previous
+season, and were likely already a very good posterior approximation. 
+
+Secondly, the time series plots for the dynamic team log-resource parameters in Figures \ref{fig:filter-1} to
+\ref{fig:filter-4} show that the particle filtering methods do provide accurate tracking of the underlying true
+log-resource parameters. We must also bear in mind that the information of the underlying process is taken from match
+results, which is a rather noisy process. For example it is not unlikely that a team can be improving and still lose a
+match to a worse team, in addition sometimes there may be few, or even no goals so information can be scarce. It should
+also be noted that, in contrast to the 10 static parameters, the posterior variance of the log-resource parameters
+appears fairly constant throughout the season.
+
+\section{Concluding remarks}
+\label{sec:Concluding_remarks_particle}
+
+In this chapter we have presented an update to the model in Chapter
+\ref{ch:An_adaptive_behaviour_model_for_association_football_using_rankings_as_prior_information} Section \ref{model} by
+allowing the 20 team resource parameters to vary dynamically throughout a season. We then presented efficient particle
+filtering algorithms which could readily handle such a dynamic underlying system and showed how the methods could be
+used to also perform inference on other model parameters which were deemed static throughout the season.
+
+We displayed the computational efficiency of the particle filtering methods when compared to more traditional \gls{MCMC}
+methods, in the case of when data are observed sequentially. In particular, if one wished to perform in-play posterior
+updating for betting purposes during a match, the \gls{MCMC} methods would not be able to provide a posterior sample
+approximation using all the available data within a reasonable time frame (or likely even before the match finished)
+whereas the particle filtering methods would simply/quickly update the pre-match posterior samples based on the small
+amount of data observed in the match. Thus, although the dynamic system model component which particle filtering methods
+readily handle being somewhat wasted on our tested data, there is still benefit in employing efficient particle
+filtering methods.
+
+We thus note that one `best of both worlds' solution would be to use traditional off-line \gls{MCMC} methods (for
+example \gls{MH}) to approximate posterior distributions when there is ample time after matches have finished, and then
+use on-line particle filtering methods to update the posterior distribution for matches in-play when time is limited.
+
+In Chapter \ref{ch:A_Utility_Based_Model} a further modification to our non-homogeneous Poisson process model is
+presented, with the aim of specifying the model so that model inference is able to capture how teams may modify their
+behaviour in light of their current league position.
+
+% We also show bivariate plots for some of the parameters at some time points in Figures \ref{fig:filter-bivariate-1-3}
+% to \ref{fig:filter-bivariate-6-10}.
+% 
+% \begin{figure}[htp]
+% \begin{center}
+% \includegraphics{filter-bivariate-1-3}
+% \caption{Bivariate plot of the particle representation of
+% the posterior distribution for parameter \(h\) and \(c_{-1}\). Darker regions
+% represent a higher density of particles}
+% \label{fig:filter-bivariate-1-3}
+% \end{center}
+% \end{figure}
+% 
+% \begin{figure}[htp]
+% \begin{center}
+% \includegraphics{filter-bivariate-2-4}
+% \caption{Bivariate plot of the particle representation of
+% the posterior distribution for parameter \(a\) and \(c_{0}\). Darker regions
+% represent a higher density of particles}
+% \label{fig:filter-bivariate-2-4}
+% \end{center}
+% \end{figure}
+% 
+% \begin{figure}[htp]
+% \begin{center}
+% \includegraphics{filter-bivariate-5-8}
+% \caption{Bivariate plot of the particle representation of
+% the posterior distribution for parameter \(c_{1}\) and \(d_{1}\). Darker regions
+% represent a higher density of particles}
+% \label{fig:filter-bivariate-5-8}
+% \end{center}
+% \end{figure}
+% 
+% \begin{figure}[htp]
+% \begin{center}
+% \includegraphics{filter-bivariate-6-10}
+% \caption{Bivariate plot of the particle representation of
+% the posterior distribution for parameter \(d_{-1}\) and \(\rho_{2}\). Darker
+% regions represent a higher density of particles}
+% \label{fig:filter-bivariate-6-10}
+% \end{center}
+% \end{figure}
+
+% We also show bivariate plots for some of the parameters at some time points in Figure \ref{fig:sim-filter-bivariate-1-3}
+% to Figure \ref{fig:sim-filter-bivariate-6-10}.
+% 
+% \begin{figure}[htp]
+% \begin{center}
+% \includegraphics{sim-filter-bivariate-1-3}
+% \caption{Bivariate plot of the particle representation of the posterior distribution for parameter \(h\) and \(c_{-1}\).
+% Darker regions represent a higher density of particles. \textcolor{green}{X}, the true parameter values}
+% \label{fig:sim-filter-bivariate-1-3}
+% \end{center}
+% \end{figure}
+% 
+% \begin{figure}[htp]
+% \begin{center}
+% \includegraphics{sim-filter-bivariate-2-4}
+% \caption{Bivariate plot of the particle representation of the posterior distribution for parameter \(a\) and \(c_{0}\).
+% Darker regions represent a higher density of particles. \textcolor{green}{X}, the true parameter values}
+% \label{fig:sim-filter-bivariate-2-4}
+% \end{center}
+% \end{figure}
+% 
+% \begin{figure}[htp]
+% \begin{center}
+% \includegraphics{sim-filter-bivariate-5-8}
+% \caption{Bivariate plot of the particle representation of the posterior distribution for parameter \(c_{1}\) and
+% \(d_{1}\). Darker regions represent a higher density of particles. \textcolor{green}{X}, the true parameter values}
+% \label{fig:sim-filter-bivariate-5-8}
+% \end{center}
+% \end{figure}
+% 
+% \begin{figure}[htp]
+% \begin{center}
+% \includegraphics{sim-filter-bivariate-6-10}
+% \caption{Bivariate plot of the particle representation of the posterior distribution for parameter \(d_{-1}\) and
+% \(\rho_{2}\). Darker regions represent a higher density of particles. \textcolor{green}{X}, the true parameter values}
+% \label{fig:sim-filter-bivariate-6-10}
+% \end{center}
+% \end{figure}
